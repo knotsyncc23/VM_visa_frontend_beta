@@ -1,0 +1,229 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * VM Visa Brand Colors
+   * All colors are expressed as HSL values for consistency with tailwind.config.ts
+   */
+  :root {
+    /* Base colors */
+    --background: 250 100% 99%;
+    --foreground: 220 15% 25%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 25%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 25%;
+
+    --primary: 220 85% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 25% 95%;
+    --secondary-foreground: 220 15% 25%;
+
+    --muted: 210 25% 95%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 210 25% 95%;
+    --accent-foreground: 220 15% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 15% 90%;
+    --input: 210 15% 90%;
+    --ring: 220 85% 35%;
+
+    --radius: 0.75rem;
+
+    /* VM Visa Brand Colors */
+    --royal-blue-50: 220 100% 97%;
+    --royal-blue-100: 220 100% 93%;
+    --royal-blue-500: 220 85% 45%;
+    --royal-blue-600: 220 85% 35%;
+    --royal-blue-700: 220 85% 25%;
+    --royal-blue-900: 220 85% 15%;
+
+    --sky-blue-300: 195 100% 85%;
+    --sky-blue-400: 195 100% 75%;
+    --sky-blue-500: 195 100% 65%;
+
+    --sage-green-300: 95 25% 75%;
+    --sage-green-400: 95 25% 65%;
+    --sage-green-500: 95 25% 55%;
+    --sage-green-600: 95 25% 45%;
+
+    --mint-green-300: 120 100% 85%;
+    --mint-green-400: 120 100% 75%;
+    --mint-green-500: 120 100% 65%;
+
+    --creamy-beige-100: 50 25% 95%;
+    --creamy-beige-200: 50 25% 90%;
+    --creamy-beige-300: 50 25% 85%;
+
+    --sandstone-300: 30 55% 75%;
+    --sandstone-400: 30 55% 65%;
+    --sandstone-500: 30 55% 55%;
+
+    --cool-gray-100: 210 15% 95%;
+    --cool-gray-300: 210 15% 85%;
+    --cool-gray-500: 210 15% 55%;
+    --cool-gray-600: 210 15% 45%;
+    --cool-gray-700: 210 15% 35%;
+    --cool-gray-800: 210 15% 25%;
+
+    --gold-400: 45 100% 70%;
+    --gold-500: 45 100% 60%;
+    --gold-600: 45 100% 50%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 15% 90%;
+
+    --card: 220 25% 10%;
+    --card-foreground: 210 15% 90%;
+
+    --popover: 220 25% 10%;
+    --popover-foreground: 210 15% 90%;
+
+    --primary: 220 85% 55%;
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 220 25% 15%;
+    --secondary-foreground: 210 15% 90%;
+
+    --muted: 220 25% 15%;
+    --muted-foreground: 210 15% 65%;
+
+    --accent: 220 25% 15%;
+    --accent-foreground: 210 15% 90%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 25% 15%;
+    --input: 220 25% 15%;
+    --ring: 220 85% 55%;
+
+    /* Dark mode brand colors */
+    --royal-blue-50: 220 25% 15%;
+    --royal-blue-100: 220 25% 20%;
+    --royal-blue-500: 220 85% 55%;
+    --royal-blue-600: 220 85% 65%;
+    --royal-blue-700: 220 85% 75%;
+    --royal-blue-900: 220 85% 85%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 shadow-xl;
+  }
+
+  .glass-card-dark {
+    @apply backdrop-blur-md bg-black/10 border border-white/10 shadow-xl;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-royal-blue-600 to-sky-blue-500 bg-clip-text text-transparent;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden rounded-xl px-8 py-4 font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-2xl bg-gradient-royal;
+  }
+
+  .btn-premium::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.6s;
+  }
+
+  .btn-premium:hover::before {
+    left: 100%;
+  }
+
+  .floating-card {
+    @apply transform transition-all duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-2xl;
+  }
+
+  .visa-pattern {
+    background-image:
+      radial-gradient(
+        circle at 25% 25%,
+        rgba(30, 58, 138, 0.1) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 75% 75%,
+        rgba(135, 206, 235, 0.1) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        rgba(156, 175, 136, 0.1) 0%,
+        transparent 50%
+      );
+  }
+
+  .immigration-bg {
+    background-image:
+      linear-gradient(
+        135deg,
+        rgba(250, 250, 255, 0.9),
+        rgba(245, 248, 255, 0.9)
+      ),
+      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e0e7ff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20v40c11.046 0 20-8.954 20-20z'/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
