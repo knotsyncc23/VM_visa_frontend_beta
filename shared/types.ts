@@ -137,13 +137,22 @@ export interface CreateVisaRequestData {
   priority: 'low' | 'medium' | 'high' | 'urgent';
 }
 
+export interface Milestone {
+  title: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  deliverables?: string[];
+}
+
 export interface CreateProposalData {
   requestId: string;
   budget: number;
   timeline: string;
   coverLetter: string;
   proposalText: string;
-  portfolio: string[];
+  milestones?: Milestone[];
+  portfolio?: string[];
 }
 
 export interface UpdateProfileData {

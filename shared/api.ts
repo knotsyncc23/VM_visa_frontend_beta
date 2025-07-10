@@ -3,6 +3,8 @@
  * API configuration and types
  */
 
+import { CreateVisaRequestData } from './types';
+
 // API Base URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -104,6 +106,13 @@ class ApiClient {
     });
   }
 
+  async updateVisaRequest(id: string, data: Partial<CreateVisaRequestData>): Promise<{success: boolean, data: VisaRequest}> {
+    return this.request<{success: boolean, data: VisaRequest}>(`/visa-requests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Proposals
   async getProposals(params?: any): Promise<Proposal[]> {
     const query = params ? `?${new URLSearchParams(params)}` : '';
@@ -115,6 +124,18 @@ class ApiClient {
     return this.request<Proposal>('/proposals', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async acceptProposal(proposalId: string): Promise<{success: boolean, data: Proposal}> {
+    return this.request<{success: boolean, data: Proposal}>(`/proposals/${proposalId}/accept`, {
+      method: 'PUT',
+    });
+  }
+
+  async rejectProposal(proposalId: string): Promise<{success: boolean, data: Proposal}> {
+    return this.request<{success: boolean, data: Proposal}>(`/proposals/${proposalId}/reject`, {
+      method: 'PUT',
     });
   }
 
@@ -132,6 +153,14 @@ class ApiClient {
 
   async sendMessage(data: SendMessageData): Promise<Message> {
     const response = await this.request<{success: boolean, data: Message}>('/messages', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  }
+
+  async createConversation(data: {participantId: string, requestId?: string, proposalId?: string}): Promise<any> {
+    const response = await this.request<{success: boolean, data: any}>('/messages/conversations', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -218,16 +247,6 @@ export interface VisaRequest {
   updatedAt: string;
 }
 
-export interface CreateVisaRequestData {
-  title: string;
-  description: string;
-  visaType: string;
-  targetCountry: string;
-  budget: number;
-  deadline: string;
-  requirements: string[];
-}
-
 export interface Proposal {
   id: string;
   agentId: string;
@@ -242,11 +261,19 @@ export interface Proposal {
 }
 
 export interface CreateProposalData {
-  visaRequestId: string;
-  title: string;
-  description: string;
-  price: number;
+  requestId: string;
+  budget: number;
   timeline: string;
+  coverLetter: string;
+  proposalText: string;
+  milestones: Array<{
+    title: string;
+    description: string;
+    amount: number;
+    dueDate: string;
+    deliverables?: string[];
+  }>;
+  portfolio?: string[];
 }
 
 export interface Message {

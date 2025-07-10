@@ -28,28 +28,7 @@ import {
 } from "lucide-react";
 import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
-
-interface VisaRequest {
-  id: string;
-  _id?: string;
-  title: string;
-  visaType: string;
-  country: string;
-  budget: string;
-  timeline: string;
-  description: string;
-  userId: string;
-  user?: {
-    name: string;
-    avatar?: string;
-    isVerified?: boolean;
-  };
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  requirements?: string[];
-  proposalCount?: number;
-}
+import { VisaRequest } from "@shared/types";
 
 export function IncomingRequests() {
   const { user } = useAuth();
@@ -86,23 +65,6 @@ export function IncomingRequests() {
     { label: "Flexible", value: "flexible" },
   ];
 
-  // Handle messaging with client
-  const handleMessageClient = async (clientId: string, requestId: string) => {
-    try {
-      // Create or find conversation
-      const conversation = await api.createConversation({
-        participantId: clientId,
-        requestId: requestId
-      });
-      
-      // Navigate to messages page with conversation ID
-      window.location.href = `/messages?conversation=${conversation.id}`;
-    } catch (error) {
-      console.error('Failed to start conversation:', error);
-      alert('Failed to start conversation. Please try again.');
-    }
-  };
-
   // Fetch incoming visa requests
   const fetchIncomingRequests = async () => {
     if (!user) return;
@@ -111,23 +73,7 @@ export function IncomingRequests() {
       setIsLoading(true);
       // Fetch all open/pending visa requests that agents can submit proposals to
       const requestsData = await api.getVisaRequests({ status: 'pending' });
-      setRequests(Array.isArray(requestsData) ? requestsData.map(req => ({
-        id: req.id || (req as any)._id,
-        _id: (req as any)._id,
-        title: req.title,
-        visaType: req.visaType,
-        country: (req as any).country || req.targetCountry,
-        budget: String(req.budget),
-        timeline: (req as any).timeline || req.deadline,
-        description: req.description,
-        userId: (req as any).userId || req.clientId || '',
-        user: (req as any).user,
-        status: req.status,
-        createdAt: req.createdAt,
-        updatedAt: req.updatedAt,
-        requirements: req.requirements,
-        proposalCount: (req as any).proposalCount,
-      })) : []);
+      setRequests(Array.isArray(requestsData) ? requestsData : []);
     } catch (error) {
       console.error('Failed to fetch incoming requests:', error);
       setRequests([]);
@@ -151,27 +97,27 @@ export function IncomingRequests() {
       setIsLoading(true);
       const requestId = selectedRequestForProposal.id;
       
-      // Use direct fetch for the simplified endpoint
-      const response = await fetch('http://localhost:5000/api/proposals/simple', {
+      // Create a simple milestone for the proposal
+      const milestones = [{
+        title: "Complete Visa Application",
+        description: proposalData.proposalText.substring(0, 200) + "...",
+        amount: Number(proposalData.budget),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        deliverables: ["Completed application", "Document preparation", "Submission assistance"]
+      }];
+      
+      await api.request('/proposals', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
         body: JSON.stringify({
           requestId,
-          budget: proposalData.budget,
+          budget: Number(proposalData.budget),
           timeline: proposalData.timeline,
           coverLetter: proposalData.coverLetter,
-          proposalText: proposalData.proposalText
-        })
+          proposalText: proposalData.proposalText,
+          milestones,
+          portfolio: []
+        }),
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
 
       alert('Proposal submitted successfully!');
       setShowProposalModal(false);
@@ -180,9 +126,9 @@ export function IncomingRequests() {
       
       // Refresh the requests to update proposal counts
       fetchIncomingRequests();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to submit proposal:', error);
-      alert(`Failed to submit proposal: ${error.message}`);
+      alert('Failed to submit proposal. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -396,11 +342,7 @@ export function IncomingRequests() {
                     <Eye className="w-4 h-4 mr-1" />
                     Details
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleMessageClient(request.userId, request.id || request._id)}
-                  >
+                  <Button variant="outline" size="sm">
                     <MessageCircle className="w-4 h-4 mr-1" />
                     Message
                   </Button>

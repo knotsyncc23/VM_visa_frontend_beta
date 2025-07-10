@@ -8,7 +8,6 @@ import {
   Bell,
   Search,
   Plus,
-  Bot,
   Calendar,
   BarChart3,
   Clock,
@@ -20,8 +19,6 @@ import {
   FileText,
   Users,
   Upload,
-  Star,
-  MessageCircle,
   Menu,
   Eye,
   Edit,
@@ -36,13 +33,9 @@ import { MyRequests } from "@/components/dashboard/my-requests";
 import { AgentProposals } from "@/components/dashboard/agent-proposals";
 import { ProgressTracker } from "@/components/dashboard/progress-tracker";
 import { DocumentUpload } from "@/components/dashboard/document-upload";
-import { MessagingPanel } from "@/components/dashboard/messaging-panel";
-import { AIAssistant } from "@/components/dashboard/ai-assistant";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
 import { FloatingAIAssistant } from "@/components/dashboard/floating-ai-assistant";
-import { RatingsReviews } from "@/components/dashboard/ratings-reviews";
 import { BrowseAgentsFiltered } from "@/components/dashboard/browse-agents-filtered";
-import { UserProfile } from "@/components/dashboard/user-profile";
 import { ProfessionalSidebar } from "@/components/dashboard/shared/ProfessionalSidebar";
 import { useAuth } from "@/components/auth/auth-context";
 import { api, DashboardStats, VisaRequest, Proposal } from "@shared/api";
@@ -53,11 +46,7 @@ type DashboardView =
   | "agent-proposals"
   | "progress"
   | "documents"
-  | "messages"
-  | "ai-assistant"
   | "browse-agents"
-  | "reviews"
-  | "profile"
   | "settings";
 
 export default function ClientDashboard() {
@@ -67,8 +56,6 @@ export default function ClientDashboard() {
   const [showFloatingAI, setShowFloatingAI] = useState(false);
   const [notifications, setNotifications] = useState(3);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
   const [visaRequests, setVisaRequests] = useState<VisaRequest[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,10 +77,6 @@ export default function ClientDashboard() {
         const stats = await api.getDashboardStats();
         setDashboardStats(stats);
         
-        // Fetch conversations
-        const conversationsData = await api.getConversations();
-        setConversations(Array.isArray(conversationsData) ? conversationsData : []);
-        
         // Fetch user's visa requests
         const requests = await api.getVisaRequests({ userId: user.id });
         setVisaRequests(Array.isArray(requests) ? requests : []);
@@ -112,7 +95,6 @@ export default function ClientDashboard() {
         // Set empty arrays as fallback
         setVisaRequests([]);
         setProposals([]);
-        setConversations([]);
       } finally {
         setIsLoading(false);
       }
@@ -285,33 +267,9 @@ export default function ClientDashboard() {
       badge: null,
     },
     {
-      id: "messages",
-      label: "Messages",
-      icon: MessageCircle,
-      badge: dashboardStats?.unreadMessages?.toString() || conversations.filter(c => c.unreadCount > 0).length.toString(),
-    },
-    {
       id: "agent-proposals",
       label: "Agent Proposals",
       icon: Users,
-      badge: null,
-    },
-    {
-      id: "ai-assistant",
-      label: "AI Assistant",
-      icon: Bot,
-      badge: null,
-    },
-    {
-      id: "reviews",
-      label: "Reviews",
-      icon: Star,
-      badge: null,
-    },
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
       badge: null,
     },
   ];
@@ -328,16 +286,8 @@ export default function ClientDashboard() {
         return <DocumentUpload />;
       case "browse-agents":
         return <BrowseAgentsFiltered />;
-      case "messages":
-        return <MessagingPanel />;
       case "agent-proposals":
         return <AgentProposals />;
-      case "ai-assistant":
-        return <AIAssistant />;
-      case "reviews":
-        return <RatingsReviews />;
-      case "profile":
-        return <UserProfile />;
       case "settings":
         return <div className="p-6"><h2 className="text-2xl font-bold">Settings</h2><p>Settings panel coming soon...</p></div>;
       default:

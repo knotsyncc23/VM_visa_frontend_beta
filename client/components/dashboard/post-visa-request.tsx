@@ -31,7 +31,7 @@ interface FormData {
   description: string;
   budget: string;
   timeline: string;
-  priority: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 interface PostVisaRequestProps {
@@ -102,16 +102,15 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
   }, []);
 
   const visaTypes = [
-    "Work Permit",
-    "Student Visa",
-    "Tourist Visa",
-    "Business Visa",
-    "Family Sponsorship",
-    "Permanent Residence",
-    "Refugee/Asylum",
-    "Transit Visa",
-    "Investment Visa",
-    "Other",
+    { label: "Work Permit", value: "work-permit" },
+    { label: "Student Visa", value: "student-visa" },
+    { label: "Tourist Visa", value: "visitor-visa" },
+    { label: "Business Visa", value: "business-visa" },
+    { label: "Family Sponsorship", value: "family-visa" },
+    { label: "Permanent Residence", value: "permanent-residence" },
+    { label: "Refugee/Asylum", value: "refugee-protection" },
+    { label: "Citizenship", value: "citizenship" },
+    { label: "Other", value: "other" },
   ];
 
   const countries = [
@@ -131,21 +130,22 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
   ];
 
   const budgetRanges = [
-    "Under $500",
-    "$500 - $1,000",
-    "$1,000 - $2,500",
-    "$2,500 - $5,000",
-    "$5,000 - $10,000",
-    "Over $10,000",
+    { label: "Under $500", value: "under-500" },
+    { label: "$500 - $1,000", value: "500-1000" },
+    { label: "$1,000 - $2,500", value: "1000-2500" },
+    { label: "$2,500 - $5,000", value: "2500-5000" },
+    { label: "$5,000 - $10,000", value: "5000-10000" },
+    { label: "Over $10,000", value: "above-10000" },
   ];
 
   const timelineOptions = [
-    "ASAP (1-2 weeks)",
-    "1 month",
-    "2-3 months",
-    "3-6 months",
-    "6+ months",
-    "No rush",
+    { label: "ASAP (1-2 weeks)", value: "urgent" },
+    { label: "1 week", value: "1-week" },
+    { label: "2 weeks", value: "2-weeks" },
+    { label: "1 month", value: "1-month" },
+    { label: "2-3 months", value: "2-3-months" },
+    { label: "3-6 months", value: "3-6-months" },
+    { label: "Flexible", value: "flexible" },
   ];
 
   const generateAIDescription = async () => {
@@ -236,10 +236,10 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
         title: formData.title,
         description: formData.description,
         visaType: formData.visaType,
-        targetCountry: formData.country,
-        budget: parseFloat(formData.budget),
-        deadline: new Date(Date.now() + parseInt(formData.timeline) * 24 * 60 * 60 * 1000).toISOString(),
-        requirements: []
+        country: formData.country,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        priority: formData.priority,
       };
 
       await api.createVisaRequest(requestData);
@@ -374,8 +374,8 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               >
                 <option value="">Select visa type</option>
                 {visaTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option key={type.value} value={type.value}>
+                    {type.label}
                   </option>
                 ))}
               </select>
@@ -512,8 +512,8 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               >
                 <option value="">Select budget range</option>
                 {budgetRanges.map((range) => (
-                  <option key={range} value={range}>
-                    {range}
+                  <option key={range.value} value={range.value}>
+                    {range.label}
                   </option>
                 ))}
               </select>
@@ -535,8 +535,8 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               >
                 <option value="">Select timeline</option>
                 {timelineOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>

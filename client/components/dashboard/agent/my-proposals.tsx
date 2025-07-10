@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,22 +23,98 @@ import {
   Star,
   Send,
 } from "lucide-react";
+import { api } from "@shared/api";
+import { useAuth } from "@/components/auth/auth-context";
+
+interface Proposal {
+  id: string;
+  _id?: string;
+  agentId: string;
+  requestId: string;
+  title?: string;
+  budget: number;
+  timeline: string;
+  coverLetter: string;
+  proposalText: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'counter';
+  createdAt: string;
+  updatedAt: string;
+  request?: {
+    title: string;
+    visaType: string;
+    country: string;
+    user?: {
+      name: string;
+      avatar?: string;
+    };
+  };
+  // Legacy/mock fields for backward compatibility
+  client?: string;
+  clientCompany?: string;
+  submittedDate?: string;
+  responseTime?: string;
+  proposedRate?: string;
+  estimatedTimeline?: string;
+  visaType?: string;
+  country?: string;
+  description?: string;
+  clientBudget?: string;
+  competingProposals?: number;
+  clientRating?: number;
+  lastActivity?: string;
+  activityTime?: string;
+  winProbability?: number;
+}
 
 export function MyProposals() {
+  const { user } = useAuth();
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const statusOptions = [
-    { id: "all", label: "All Proposals", count: 15 },
-    { id: "pending", label: "Pending Review", count: 6 },
-    { id: "accepted", label: "Accepted", count: 4 },
-    { id: "rejected", label: "Rejected", count: 3 },
-    { id: "counter", label: "Counter Offer", count: 2 },
-  ];
+  // Fetch agent's proposals
+  const fetchProposals = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const proposalsData = await api.getProposals({ agentId: user.id });
+      // Transform API proposals to match component interface
+      const transformedProposals = (Array.isArray(proposalsData) ? proposalsData : []).map((p: any) => ({
+        id: p.id || p._id,
+        _id: p._id,
+        agentId: p.agentId,
+        requestId: p.requestId || p.visaRequestId,
+        title: p.title || p.request?.title || 'Visa Application',
+        budget: p.budget || p.price || 0,
+        timeline: p.timeline,
+        coverLetter: p.coverLetter || '',
+        proposalText: p.proposalText || p.description || '',
+        status: p.status,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        request: p.request || p.visaRequest
+      }));
+      setProposals(transformedProposals);
+    } catch (error) {
+      console.error('Failed to fetch proposals:', error);
+      setProposals([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const proposals = [
+  useEffect(() => {
+    fetchProposals();
+    // Refresh every 30 seconds for real-time updates
+    const interval = setInterval(fetchProposals, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const mockProposals = [
     {
       id: "1",
       title: "H1-B Visa Application for Tech Professional",
@@ -146,15 +222,27 @@ export function MyProposals() {
     },
   ];
 
-  const filteredProposals = proposals.filter((proposal) => {
+  // Use real proposals when available, fallback to filtered mock data for display
+  const displayProposals = proposals.length > 0 ? proposals : mockProposals;
+
+  const statusOptions = [
+    { id: "all", label: "All Proposals", count: displayProposals.length },
+    { id: "pending", label: "Pending Review", count: displayProposals.filter((p: any) => p.status === 'pending').length },
+    { id: "accepted", label: "Accepted", count: displayProposals.filter((p: any) => p.status === 'accepted').length },
+    { id: "rejected", label: "Rejected", count: displayProposals.filter((p: any) => p.status === 'rejected').length },
+    { id: "withdrawn", label: "Withdrawn", count: displayProposals.filter((p: any) => p.status === 'withdrawn').length },
+    { id: "counter", label: "Counter Offer", count: displayProposals.filter((p: any) => p.status === 'counter').length },
+  ];
+
+  const filteredProposals = displayProposals.filter((proposal: any) => {
     const matchesStatus =
       filterStatus === "all" || proposal.status === filterStatus;
     const matchesSearch =
       searchTerm === "" ||
-      proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      proposal.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      proposal.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      proposal.visaType.toLowerCase().includes(searchTerm.toLowerCase());
+      (proposal.title || proposal.request?.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (proposal.client || proposal.request?.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (proposal.country || proposal.request?.country || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (proposal.visaType || proposal.request?.visaType || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -211,14 +299,19 @@ export function MyProposals() {
   };
 
   const calculateStats = () => {
-    const total = proposals.length;
-    const accepted = proposals.filter((p) => p.status === "accepted").length;
-    const pending = proposals.filter((p) => p.status === "pending").length;
+    const total = displayProposals.length;
+    const accepted = displayProposals.filter((p: any) => p.status === "accepted").length;
+    const pending = displayProposals.filter((p: any) => p.status === "pending").length;
     const averageRate =
-      proposals.reduce(
-        (sum, p) => sum + parseInt(p.proposedRate.replace(/[$,]/g, "")),
+      displayProposals.reduce(
+        (sum: number, p: any) => {
+          const rate = p.proposedRate 
+            ? parseInt(p.proposedRate.replace(/[$,]/g, ""))
+            : p.budget || 0;
+          return sum + rate;
+        },
         0,
-      ) / total;
+      ) / (total || 1);
 
     return {
       total,
@@ -389,7 +482,7 @@ export function MyProposals() {
 
       {/* Proposals List */}
       <div className="space-y-4">
-        {filteredProposals.map((proposal, index) => (
+        {filteredProposals.map((proposal: any, index) => (
           <motion.div
             key={proposal.id}
             initial={{ opacity: 0, y: 20 }}
@@ -409,15 +502,15 @@ export function MyProposals() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <User className="w-4 h-4" />
-                        <span>{proposal.client}</span>
+                        <span>{proposal.client || proposal.request?.user?.name || 'Unknown Client'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <MapPin className="w-4 h-4" />
-                        <span>{proposal.country}</span>
+                        <span>{proposal.country || proposal.request?.country || 'Unknown Country'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>Submitted {proposal.submittedDate}</span>
+                        <span>Submitted {proposal.submittedDate || new Date(proposal.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -431,14 +524,14 @@ export function MyProposals() {
 
                 {/* Description */}
                 <p className="text-gray-700 line-clamp-2">
-                  {proposal.description}
+                  {proposal.description || proposal.proposalText || proposal.coverLetter || 'No description available'}
                 </p>
 
                 {/* Last Activity */}
                 <div className="flex items-center space-x-2 text-sm">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-gray-600">
-                    {proposal.lastActivity} • {proposal.activityTime}
+                    {proposal.lastActivity || 'Recently submitted'} • {proposal.activityTime || 'Just now'}
                   </span>
                 </div>
               </div>
@@ -449,19 +542,19 @@ export function MyProposals() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Your Rate</span>
                     <span className="font-semibold text-gray-900">
-                      {proposal.proposedRate}
+                      {proposal.proposedRate || `$${proposal.budget}` || 'TBD'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Client Budget</span>
                     <span className="font-semibold text-gray-900">
-                      {proposal.clientBudget}
+                      {proposal.clientBudget || 'Budget not disclosed'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Timeline</span>
                     <span className="font-semibold text-gray-900">
-                      {proposal.estimatedTimeline}
+                      {proposal.estimatedTimeline || proposal.timeline}
                     </span>
                   </div>
                 </div>
@@ -471,16 +564,16 @@ export function MyProposals() {
                     <span className="text-gray-600">Win Probability</span>
                     <span
                       className={`font-medium ${getWinProbabilityColor(
-                        proposal.winProbability,
+                        proposal.winProbability || 50,
                       )}`}
                     >
-                      {proposal.winProbability}%
+                      {proposal.winProbability || 50}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${proposal.winProbability}%` }}
+                      animate={{ width: `${proposal.winProbability || 50}%` }}
                       transition={{ duration: 1, delay: 0.5 }}
                       className="h-2 rounded-full"
                       style={{ backgroundColor: "#326dee" }}
@@ -492,7 +585,7 @@ export function MyProposals() {
                   <div className="flex items-center justify-between">
                     <span>Competing Proposals</span>
                     <span className="font-medium">
-                      {proposal.competingProposals}
+                      {proposal.competingProposals || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -500,7 +593,7 @@ export function MyProposals() {
                     <div className="flex items-center space-x-1">
                       <Star className="w-3 h-3 text-yellow-400 fill-current" />
                       <span className="font-medium">
-                        {proposal.clientRating}
+                        {proposal.clientRating || 0}
                       </span>
                     </div>
                   </div>
