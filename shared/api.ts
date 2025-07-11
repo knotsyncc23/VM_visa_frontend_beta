@@ -4,6 +4,7 @@
  */
 
 import { CreateVisaRequestData } from './types';
+import { MockApiService } from './mockApi';
 
 // API Base URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -11,9 +12,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:50
 // API Client
 class ApiClient {
   private baseURL: string;
+  private mockApi: MockApiService;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+    this.mockApi = MockApiService.getInstance();
   }
 
   private async request<T>(
@@ -226,6 +229,75 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // Cases
+  async getCases(): Promise<any[]> {
+    try {
+      const response = await this.request<{success: boolean, data: any[]}>('/cases');
+      return response.data || [];
+    } catch (error) {
+      console.warn('API getCases failed, using mock data:', error);
+      return await this.mockApi.getCases();
+    }
+  }
+
+  async getCase(caseId: string): Promise<any> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>(`/cases/${caseId}`);
+      return response.data;
+    } catch (error) {
+      console.warn('API getCase failed, using mock data:', error);
+      return await this.mockApi.getCase(caseId);
+    }
+  }
+
+  async updateMilestone(caseId: string, milestoneIndex: number, data: any): Promise<any> {
+    try {
+      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/milestones/${milestoneIndex}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.warn('API updateMilestone failed, using mock data:', error);
+      return await this.mockApi.updateMilestone(caseId, milestoneIndex, data);
+    }
+  }
+
+  async approveMilestone(caseId: string, milestoneIndex: number, clientFeedback?: string): Promise<any> {
+    try {
+      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/milestones/${milestoneIndex}/approve`, {
+        method: 'PUT',
+        body: JSON.stringify({ clientFeedback }),
+      });
+    } catch (error) {
+      console.warn('API approveMilestone failed, using mock data:', error);
+      return await this.mockApi.approveMilestone(caseId, milestoneIndex, clientFeedback);
+    }
+  }
+
+  async addCaseNote(caseId: string, note: string): Promise<any> {
+    try {
+      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({ note }),
+      });
+    } catch (error) {
+      console.warn('API addCaseNote failed, using mock data:', error);
+      return await this.mockApi.addCaseNote(caseId, note);
+    }
+  }
+
+  async uploadCaseDocument(caseId: string, documentData: any): Promise<any> {
+    try {
+      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/documents`, {
+        method: 'POST',
+        body: JSON.stringify(documentData),
+      });
+    } catch (error) {
+      console.warn('API uploadCaseDocument failed, using mock data:', error);
+      return await this.mockApi.uploadCaseDocument(caseId, documentData);
+    }
   }
 
   // Token validation

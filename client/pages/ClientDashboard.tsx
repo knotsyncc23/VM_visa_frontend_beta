@@ -34,6 +34,7 @@ import { AgentProposals } from "@/components/dashboard/agent-proposals";
 import { ProgressTracker } from "@/components/dashboard/progress-tracker";
 import { DocumentUpload } from "@/components/dashboard/document-upload";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { ActiveCases } from "@/components/dashboard/active-cases";
 import { FloatingAIAssistant } from "@/components/dashboard/floating-ai-assistant";
 import { BrowseAgentsFiltered } from "@/components/dashboard/browse-agents-filtered";
 import { ProfessionalSidebar } from "@/components/dashboard/shared/ProfessionalSidebar";
@@ -43,6 +44,7 @@ import { api, DashboardStats, VisaRequest, Proposal } from "@shared/api";
 type DashboardView =
   | "overview"
   | "my-requests"
+  | "active-cases"
   | "agent-proposals"
   | "progress"
   | "documents"
@@ -64,6 +66,15 @@ export default function ClientDashboard() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Handle URL parameters for navigation
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab && ['overview', 'my-requests', 'active-cases', 'progress', 'documents', 'browse-agents', 'agent-proposals', 'settings'].includes(tab)) {
+      setCurrentView(tab as DashboardView);
+    }
+  }, []);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -249,6 +260,12 @@ export default function ClientDashboard() {
       badge: dashboardStats?.totalRequests?.toString() || visaRequests.length.toString(),
     },
     {
+      id: "active-cases",
+      label: "Active Cases",
+      icon: CheckCircle,
+      badge: dashboardStats?.activeRequests?.toString() || "0",
+    },
+    {
       id: "progress",
       label: "Progress",
       icon: Clock,
@@ -280,6 +297,8 @@ export default function ClientDashboard() {
         return <DashboardOverview onNavigate={(view: string) => setCurrentView(view as DashboardView)} />;
       case "my-requests":
         return <MyRequests />;
+      case "active-cases":
+        return <ActiveCases />;
       case "progress":
         return <ProgressTracker />;
       case "documents":

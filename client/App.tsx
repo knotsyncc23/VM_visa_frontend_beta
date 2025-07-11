@@ -57,6 +57,7 @@ import EscrowDashboard from "./pages/EscrowDashboard";
 import AdminEscrowPage from "./pages/AdminEscrowPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
+import { CaseDetailPage } from "./pages/CaseDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -245,6 +246,16 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminEscrowPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/case/:caseId"
+            element={
+              <ProtectedRoute
+                allowedRoles={["client", "agent", "organization"]}
+              >
+                <CaseDetailPage />
               </ProtectedRoute>
             }
           />

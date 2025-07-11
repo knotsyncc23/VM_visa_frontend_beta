@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import { AgentOverview } from "@/components/dashboard/agent/agent-overview";
 import { IncomingRequests } from "@/components/dashboard/agent/incoming-requests";
 import { MyProposals } from "@/components/dashboard/agent/my-proposals";
-import { ActiveProjects } from "@/components/dashboard/agent/active-projects";
+import { ActiveCases } from "@/components/dashboard/active-cases";
 import { ClientChat } from "@/components/dashboard/agent/client-chat";
 import { AgentDocuments } from "@/components/dashboard/agent/agent-documents";
 import { AgentAnalytics } from "@/components/dashboard/agent/agent-analytics";
@@ -277,7 +277,7 @@ export default function AgentDashboard() {
       case "my-proposals":
         return <MyProposals />;
       case "active-projects":
-        return <ActiveProjects />;
+        return <ActiveCases />;
       case "documents":
         return <AgentDocuments />;
       case "analytics":

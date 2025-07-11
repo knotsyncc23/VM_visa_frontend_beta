@@ -253,6 +253,193 @@ export class MockApiService {
     };
   }
 
+  // Mock case management
+  async getCases() {
+    await this.delay(800);
+    
+    return [
+      {
+        _id: 'case-001',
+        requestId: {
+          _id: 'req-001',
+          title: 'Student Visa for Canada',
+          visaType: 'student-visa',
+          country: 'Canada',
+          priority: 'high'
+        },
+        agentId: {
+          _id: 'agent-001',
+          name: 'Sarah Johnson',
+          email: 'sarah@example.com',
+          avatar: '/placeholder.svg',
+          isVerified: true
+        },
+        status: 'active',
+        priority: 'high',
+        progress: 65,
+        totalAmount: 3500,
+        paidAmount: 2000,
+        milestones: [
+          {
+            title: 'Document Review',
+            description: 'Review and verify all submitted documents',
+            amount: 500,
+            status: 'approved',
+            dueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            title: 'Application Submission',
+            description: 'Submit visa application to immigration office',
+            amount: 1500,
+            status: 'in-progress',
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            isActive: true
+          },
+          {
+            title: 'Interview Preparation',
+            description: 'Prepare for visa interview',
+            amount: 800,
+            status: 'pending',
+            dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ],
+        currentMilestone: 2,
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        estimatedCompletionDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+        lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+  }
+
+  async getCase(caseId: string) {
+    await this.delay(600);
+    
+    return {
+      _id: caseId,
+      requestId: {
+        _id: 'req-001',
+        title: 'Student Visa for Canada',
+        visaType: 'student-visa',
+        country: 'Canada',
+        priority: 'high',
+        description: 'Applying for a student visa to pursue Masters in Computer Science at University of Toronto.'
+      },
+      agentId: {
+        _id: 'agent-001',
+        name: 'Sarah Johnson',
+        email: 'sarah@example.com',
+        avatar: '/placeholder.svg',
+        isVerified: true,
+        phone: '+1-555-0123'
+      },
+      proposalId: {
+        _id: 'proposal-001',
+        budget: 3500,
+        timeline: '2-3-months',
+        coverLetter: 'I have extensive experience with Canadian student visas...',
+        proposalText: 'Comprehensive visa application service including document review, application preparation, and interview coaching.'
+      },
+      status: 'active',
+      priority: 'high',
+      progress: 65,
+      totalAmount: 3500,
+      paidAmount: 2000,
+      milestones: [
+        {
+          title: 'Document Review',
+          description: 'Review and verify all submitted documents',
+          amount: 500,
+          status: 'approved',
+          dueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          deliverables: ['Document checklist', 'Verification report'],
+          agentNotes: 'All documents reviewed and verified successfully.'
+        },
+        {
+          title: 'Application Submission',
+          description: 'Submit visa application to immigration office',
+          amount: 1500,
+          status: 'in-progress',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          isActive: true,
+          deliverables: ['Completed application form', 'Submission receipt']
+        },
+        {
+          title: 'Interview Preparation',
+          description: 'Prepare for visa interview',
+          amount: 800,
+          status: 'pending',
+          dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+          deliverables: ['Interview guide', 'Mock interview session']
+        }
+      ],
+      currentMilestone: 2,
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      estimatedCompletionDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      clientNotes: 'Very pleased with the progress so far.',
+      agentNotes: 'Client is very responsive and has provided all required documents.',
+      documents: [
+        {
+          name: 'Passport Copy',
+          url: '/documents/passport.pdf',
+          type: 'passport',
+          uploadedBy: 'client-001',
+          uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ],
+      timeline: [
+        {
+          action: 'case_created',
+          description: 'Case created from accepted proposal',
+          performedBy: 'system',
+          performedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          action: 'milestone_completed',
+          description: 'Document Review milestone completed',
+          performedBy: 'agent-001',
+          performedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]
+    };
+  }
+
+  async updateMilestone(caseId: string, milestoneIndex: number, data: any) {
+    await this.delay(500);
+    
+    return {
+      success: true,
+      data: { message: 'Milestone updated successfully' }
+    };
+  }
+
+  async approveMilestone(caseId: string, milestoneIndex: number, clientFeedback?: string) {
+    await this.delay(500);
+    
+    return {
+      success: true,
+      data: { message: 'Milestone approved successfully' }
+    };
+  }
+
+  async addCaseNote(caseId: string, note: string) {
+    await this.delay(400);
+    
+    return {
+      success: true,
+      data: { message: 'Note added successfully' }
+    };
+  }
+
+  async uploadCaseDocument(caseId: string, documentData: any) {
+    await this.delay(800);
+    
+    return {
+      success: true,
+      data: { message: 'Document uploaded successfully' }
+    };
+  }
+
   // Helper method to simulate network delay
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
