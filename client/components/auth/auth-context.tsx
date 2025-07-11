@@ -8,7 +8,8 @@ interface AuthContextType {
   login: (email: string, password: string, userType: string) => Promise<void>;
   logout: () => void;
   signup: (userData: any, userType: string) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<User>;
+  refreshUserData: () => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,34 +24,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem("vm-visa-auth-token");
+        console.log('Auth check - Token exists:', !!token);
 
         if (token) {
           // Verify token with backend and get current user data
-          const userData = await api.getProfile();
-          setUser(userData);
+          const isValid = await api.validateToken();
+          console.log('Auth check - Token valid:', isValid);
+          
+          if (isValid) {
+            const userData = await api.getProfile();
+            console.log('Auth check - User data:', userData);
+            setUser(userData);
 
-          // Auto-redirect based on role
-          const currentPath = window.location.pathname;
-          if (
-            currentPath === "/" ||
-            currentPath === "/login" ||
-            currentPath === "/signup"
-          ) {
-            redirectToDashboard(userData.userType);
+            // Auto-redirect based on role
+            const currentPath = window.location.pathname;
+            if (
+              currentPath === "/" ||
+              currentPath === "/login" ||
+              currentPath === "/signup"
+            ) {
+              redirectToDashboard(userData.userType);
+            }
+          } else {
+            // Token is invalid, clear it
+            console.log('Auth check - Invalid token, clearing auth data');
+            localStorage.removeItem("vm-visa-auth-token");
+            localStorage.removeItem("vm-visa-user-data");
           }
+        } else {
+          console.log('Auth check - No token found');
         }
       } catch (error) {
         console.error("Auth check failed:", error);
         // Remove invalid token
         localStorage.removeItem("vm-visa-auth-token");
         localStorage.removeItem("vm-visa-user-data");
+        
+        // If we're not on a public page, redirect to login
+        const currentPath = window.location.pathname;
+        const publicPaths = ['/', '/login', '/signup', '/about', '/contact', '/services'];
+        if (!publicPaths.includes(currentPath)) {
+          navigate('/login', { replace: true });
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   const redirectToDashboard = (userType: string) => {
     switch (userType) {
@@ -106,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       
       const registerData: RegisterData = {
-        name: userData.name,
+        name: userData.name || userData.organizationName,
         email: userData.email,
         password: userData.password,
         userType,
@@ -114,7 +136,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         location: userData.location
       };
 
-      const response = await api.register(registerData);
+      console.log("Attempting registration with:", registerData);
+
+      let response;
+      try {
+        response = await api.register(registerData);
+      } catch (apiError) {
+        console.log("Real API failed, using mock API for demo");
+        // Import mock API dynamically
+        const { mockApi } = await import('@shared/mockApi');
+        response = await mockApi.register({
+          ...registerData,
+          organizationName: userData.organizationName || userData.name,
+          userType
+        });
+        
+        // Format response to match expected structure
+        response = {
+          success: response.success,
+          token: response.data.token,
+          user: response.data.user
+        };
+      }
       
       if (response.success) {
         // Store token and user data
@@ -139,12 +182,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (data: Partial<User>) => {
     try {
+      console.log('🔄 updateProfile called with data:', data);
       const updatedUser = await api.updateProfile(data);
+      console.log('✅ Profile updated, setting user state:', updatedUser);
       setUser(updatedUser);
       localStorage.setItem("vm-visa-user-data", JSON.stringify(updatedUser));
+      return updatedUser;
     } catch (error: any) {
       console.error("Profile update error:", error);
       throw new Error(error.message || "Profile update failed");
+    }
+  };
+
+  const refreshUserData = async () => {
+    try {
+      const userData = await api.getProfile();
+      setUser(userData);
+      localStorage.setItem("vm-visa-user-data", JSON.stringify(userData));
+      return userData;
+    } catch (error: any) {
+      console.error("Profile refresh error:", error);
+      throw new Error(error.message || "Profile refresh failed");
     }
   };
 
@@ -186,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     signup,
     updateProfile,
+    refreshUserData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

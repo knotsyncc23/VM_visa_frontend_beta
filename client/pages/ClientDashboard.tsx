@@ -340,6 +340,7 @@ export default function ClientDashboard() {
             <div className="flex items-center space-x-4">
               {/* Notifications */}
               <Button
+                onClick={() => navigate("/notifications")}
                 variant="outline"
                 size="sm"
                 className="relative border-gray-300"

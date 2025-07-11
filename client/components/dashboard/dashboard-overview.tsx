@@ -45,7 +45,7 @@ export function DashboardOverview({
       const fetchStats = async () => {
         try {
           setIsLoading(true);
-          const stats = await api.getDashboardStats('client');
+          const stats = await api.getDashboardStats();
           setLocalStats(stats);
         } catch (error) {
           console.error('Failed to fetch dashboard stats:', error);
@@ -313,7 +313,7 @@ export function DashboardOverview({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onNavigate("applications")}
+                onClick={() => onNavigate("my-requests")}
               >
                 View All
               </Button>
@@ -443,7 +443,11 @@ export function DashboardOverview({
               <h2 className="text-xl font-heading font-bold text-cool-gray-800">
                 Recent Activity
               </h2>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => onNavigate("notifications")}
+              >
                 View All
               </Button>
             </div>

@@ -385,6 +385,7 @@ export default function AgentDashboard() {
 
               {/* Notifications */}
               <Button
+                onClick={() => navigate("/notifications")}
                 variant="outline"
                 size="sm"
                 className="relative border-gray-300"

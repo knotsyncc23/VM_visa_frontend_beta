@@ -202,19 +202,47 @@ export function ProgressTracker() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-cool-gray-200">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                alert(`Opening message conversation with ${app.agent}...`);
+                window.location.href = `/messages?agent=${app.agent}`;
+              }}
+            >
               <MessageCircle className="w-4 h-4 mr-2" />
               Message Agent
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                alert(`Opening document upload for ${app.title}...`);
+                window.location.href = `/documents?application=${app.id}`;
+              }}
+            >
               <Upload className="w-4 h-4 mr-2" />
               Upload Documents
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                alert(`Scheduling update call for ${app.title} with ${app.agent}...`);
+                window.location.href = `/calendar?schedule=true&agent=${app.agent}`;
+              }}
+            >
               <Calendar className="w-4 h-4 mr-2" />
               Schedule Update Call
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                alert(`Opening full application view for ${app.title}...`);
+                window.location.href = `/applications/${app.id}`;
+              }}
+            >
               <FileText className="w-4 h-4 mr-2" />
               View Application
             </Button>

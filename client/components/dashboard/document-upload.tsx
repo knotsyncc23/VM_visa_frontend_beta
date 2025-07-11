@@ -349,13 +349,41 @@ export function DocumentUpload() {
                         </Badge>
 
                         <div className="flex space-x-1">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              alert(`Opening preview for ${file.name}...`);
+                              // Mock file preview
+                              window.open(`#preview/${file.id}`, '_blank');
+                            }}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              alert(`Downloading ${file.name}...`);
+                              // Mock file download
+                              const link = document.createElement('a');
+                              link.href = '#';
+                              link.download = file.name;
+                              link.click();
+                            }}
+                          >
                             <Download className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${file.name}?`)) {
+                                alert(`${file.name} has been deleted.`);
+                                // Remove file from category
+                              }
+                            }}
+                          >
                             <X className="w-4 h-4" />
                           </Button>
                         </div>

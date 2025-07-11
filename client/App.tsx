@@ -46,7 +46,7 @@ import ChatPage from "./pages/ChatPage";
 import MessagesPage from "./pages/MessagesPage";
 import CalendarPage from "./pages/CalendarPage";
 import SupportPage from "./pages/SupportPage";
-import SettingsPage from "./pages/SettingsPage";
+import SettingsPage from "./pages/SmartSettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import AgentInsightsPage from "./pages/AgentInsightsPage";
@@ -55,6 +55,7 @@ import PaymentsPage from "./pages/PaymentsPage";
 import ToolsPage from "./pages/ToolsPage";
 import EscrowDashboard from "./pages/EscrowDashboard";
 import AdminEscrowPage from "./pages/AdminEscrowPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ function AppContent() {
     "/support",
     "/settings",
     "/profile",
+    "/notifications",
     "/agent-insights",
     "/file-manager",
     "/payments",
@@ -183,6 +185,16 @@ function AppContent() {
                 allowedRoles={["client", "agent", "organization"]}
               >
                 <ProfileEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute
+                allowedRoles={["client", "agent", "organization"]}
+              >
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />

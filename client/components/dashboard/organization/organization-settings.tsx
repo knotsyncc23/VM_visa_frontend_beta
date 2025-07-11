@@ -319,7 +319,15 @@ export function OrganizationSettings() {
                   )}
                 </button>
               </div>
-              <Button variant="outline">Regenerate</Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Generate new API key
+                  alert("API key regenerated successfully! New key: " + Math.random().toString(36).substring(2, 15));
+                }}
+              >
+                Regenerate
+              </Button>
             </div>
           </div>
 

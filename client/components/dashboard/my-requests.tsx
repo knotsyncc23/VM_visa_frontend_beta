@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PostVisaRequest } from "./post-visa-request";
+import { AgentProfilePage } from "./agent-profile";
 import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
 import { VisaRequest } from "@shared/types";
@@ -59,6 +60,9 @@ export function MyRequests() {
   const [selectedRequest, setSelectedRequest] = useState<ExtendedVisaRequest | null>(null);
   const [showEditRequest, setShowEditRequest] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<ExtendedVisaRequest & {budget: string, deadline: string}>>({});
+  const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
 
   // Form options for edit modal
   const visaTypes = [
@@ -166,14 +170,17 @@ export function MyRequests() {
           if (!requestId) return;
           
           try {
-            const proposalsData = await api.getProposals({ visaRequestId: requestId });
+            // Use correct parameter name - requestId instead of visaRequestId
+            const proposalsData = await api.getProposals({ requestId: requestId });
             counts[requestId] = Array.isArray(proposalsData) ? proposalsData.length : 0;
+            console.log(`Proposals for request ${requestId}:`, proposalsData.length);
           } catch (error) {
             console.error(`Failed to fetch proposals for request ${requestId}:`, error);
             counts[requestId] = 0;
           }
         })
       );
+      console.log('Final proposal counts:', counts);
       setProposalCounts(counts);
     } catch (error) {
       console.error('Failed to fetch proposal counts:', error);
@@ -184,7 +191,9 @@ export function MyRequests() {
   const fetchProposals = async (requestId: string) => {
     try {
       setLoadingProposals(true);
-      const proposalsData = await api.getProposals({ visaRequestId: requestId });
+      console.log('Fetching proposals for request:', requestId);
+      const proposalsData = await api.getProposals({ requestId: requestId });
+      console.log('Proposals data received:', proposalsData);
       setProposals(Array.isArray(proposalsData) ? proposalsData : []);
     } catch (error) {
       console.error('Failed to fetch proposals:', error);
@@ -239,6 +248,20 @@ export function MyRequests() {
       console.error('Failed to start conversation:', error);
       alert('Failed to start conversation. Please try again.');
     }
+  };
+
+  // Handle viewing agent profile
+  const handleViewAgentProfile = (agentId: string, proposalId?: string) => {
+    setSelectedAgentId(agentId);
+    setSelectedProposalId(proposalId || null);
+    setShowAgentProfile(true);
+  };
+
+  // Handle back from agent profile
+  const handleBackFromAgentProfile = () => {
+    setShowAgentProfile(false);
+    setSelectedAgentId(null);
+    setSelectedProposalId(null);
   };
 
   // Handle viewing request details (placeholder)
@@ -437,6 +460,18 @@ export function MyRequests() {
     }
   };
 
+  // Show agent profile if selected
+  if (showAgentProfile && selectedAgentId) {
+    return (
+      <AgentProfilePage
+        agentId={selectedAgentId}
+        proposalId={selectedProposalId || undefined}
+        onBack={handleBackFromAgentProfile}
+        onMessage={handleMessageAgent}
+      />
+    );
+  }
+
   if (showPostRequest) {
     return (
       <div>
@@ -501,7 +536,10 @@ export function MyRequests() {
               >
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Agent Info */}
-                  <div className="flex items-start gap-4">
+                  <div 
+                    className="flex items-start gap-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                    onClick={() => handleViewAgentProfile(proposal.agentId, proposal.id)}
+                  >
                     <div className="w-16 h-16 bg-gradient-to-br from-royal-blue-500 to-royal-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {proposal.agent?.name ? 
                         proposal.agent.name.split(" ").map((n: string) => n[0]).join("") : 
@@ -509,7 +547,7 @@ export function MyRequests() {
                       }
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-cool-gray-800">
+                      <h3 className="text-xl font-bold text-cool-gray-800 hover:text-royal-blue-600 transition-colors">
                         {proposal.agent?.name || 'Agent Name'}
                       </h3>
                       <div className="flex items-center gap-4 text-sm text-cool-gray-600 mb-2">
@@ -518,6 +556,7 @@ export function MyRequests() {
                         <span>💼 {proposal.agent?.experience || 'N/A'} Experience</span>
                       </div>
                       <p className="text-cool-gray-700">{proposal.coverLetter || proposal.description || 'No description provided'}</p>
+                      <p className="text-xs text-blue-600 mt-1">Click to view full profile</p>
                     </div>
                   </div>
 
@@ -1025,17 +1064,24 @@ export function MyRequests() {
                         className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center space-x-3">
+                          <div 
+                            className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                            onClick={() => {
+                              setShowProposals(false);
+                              handleViewAgentProfile(proposal.agentId, proposal.id);
+                            }}
+                          >
                             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
                               {proposal.agent?.name?.charAt(0) || 'A'}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-gray-900">
+                              <h4 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                                 {proposal.agent?.name || 'Anonymous Agent'}
                               </h4>
                               <p className="text-sm text-gray-600">
                                 {proposal.agent?.title || 'Immigration Consultant'}
                               </p>
+                              <p className="text-xs text-blue-600 mt-1">Click to view profile</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -1065,14 +1111,24 @@ export function MyRequests() {
                               variant="outline"
                               size="sm"
                               className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowProposals(false);
+                                handleViewAgentProfile(proposal.agentId, proposal.id);
+                              }}
                             >
                               View Profile
                             </Button>
                             <Button
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAcceptProposal(proposal.id);
+                              }}
+                              disabled={loadingProposals}
                             >
-                              Accept Proposal
+                              {loadingProposals ? 'Accepting...' : 'Accept Proposal'}
                             </Button>
                           </div>
                         </div>

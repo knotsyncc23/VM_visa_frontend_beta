@@ -185,6 +185,17 @@ export function OrganizationSignupForm({
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
+    // Save progress to localStorage
+    localStorage.setItem(
+      "vm-visa-org-signup",
+      JSON.stringify({ ...formData, [field]: value })
+    );
   };
 
   const validateStep = (step: number): boolean => {
@@ -194,6 +205,8 @@ export function OrganizationSignupForm({
       case 0:
         if (!formData.orgName.trim())
           newErrors.orgName = "Organization name is required";
+        if (formData.orgName.trim().length < 2)
+          newErrors.orgName = "Organization name must be at least 2 characters";
         break;
       case 1:
         if (!formData.email.trim()) newErrors.email = "Email is required";
@@ -202,8 +215,8 @@ export function OrganizationSignupForm({
         break;
       case 2:
         if (!formData.password) newErrors.password = "Password is required";
-        if (formData.password.length < 8)
-          newErrors.password = "Password must be at least 8 characters";
+        if (formData.password.length < 6)
+          newErrors.password = "Password must be at least 6 characters";
         if (formData.password !== formData.confirmPassword)
           newErrors.confirmPassword = "Passwords don't match";
         break;
@@ -268,11 +281,33 @@ export function OrganizationSignupForm({
   const handleSubmit = async () => {
     try {
       localStorage.removeItem("vm-visa-org-signup");
-      await signup(formData.email, formData.password, "organization");
+      
+      // Prepare user data for signup
+      const userData = {
+        name: formData.orgName, // Use organization name as the name
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        location: formData.countryHeadquarters,
+        organizationName: formData.orgName,
+        website: formData.website,
+        registrationNumber: formData.registrationNumber,
+        yearEstablished: formData.yearEstablished,
+        companyOverview: formData.companyOverview,
+        servicesOffered: formData.servicesOffered,
+        languagesSupported: formData.languagesSupported,
+        operatingRegions: formData.operatingRegions,
+        repName: formData.repName,
+        repDesignation: formData.repDesignation,
+        repLinkedIn: formData.repLinkedIn
+      };
+      
+      await signup(userData, "organization");
       // Redirect to organization dashboard after successful signup
       window.location.href = "/org-dashboard";
     } catch (error) {
       console.error("Signup failed:", error);
+      alert("Signup failed: " + (error as Error).message);
     }
   };
 

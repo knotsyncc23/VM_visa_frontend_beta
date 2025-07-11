@@ -29,6 +29,7 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/auth/auth-context";
 
 interface ProfessionalSidebarProps {
   userType: "client" | "agent" | "organization";
@@ -51,7 +52,67 @@ interface UserProfile {
   joinDate?: string;
 }
 
-const getUserProfile = (userType: string): UserProfile => {
+// Calculate profile completion percentage
+const calculateProfileCompletion = (user: any, userType: string): number => {
+  if (!user) return 0;
+
+  let completed = 0;
+  let total = 0;
+
+  // Basic fields for all users
+  const basicFields = ["name", "email", "phone"];
+  basicFields.forEach((field) => {
+    total++;
+    if (user[field] && user[field].trim()) completed++;
+  });
+
+  if (userType === "agent") {
+    // Agent-specific fields
+    const agentFields = ["title", "bio", "location", "experienceYears"];
+    agentFields.forEach((field) => {
+      total++;
+      if (user[field] && (typeof user[field] === "string" ? user[field].trim() : user[field] > 0))
+        completed++;
+    });
+
+    // Array fields
+    total += 2; // specializations and languages
+    if (user.specializations && user.specializations.length > 0) completed++;
+    if (user.languages && user.languages.length > 0) completed++;
+  } else if (userType === "client") {
+    // Client-specific fields
+    const clientFields = ["dateOfBirth", "nationality", "location"];
+    clientFields.forEach((field) => {
+      total++;
+      if (user[field] && user[field].trim()) completed++;
+    });
+  }
+
+  return Math.round((completed / total) * 100);
+};
+
+const getUserProfile = (userType: string, user?: any): UserProfile => {
+  if (user) {
+    // Use real user data when available
+    const userTitle = user.title || (userType === 'agent' ? 'Immigration Consultant' : userType === 'client' ? 'Client' : 'Organization');
+    const userLocation = user.location || 'Location not set';
+    const userStatus = userType === 'agent' ? 'Premium' : userType === 'client' ? 'Verified Client' : 'Enterprise';
+    const completionPercentage = calculateProfileCompletion(user, userType);
+    
+    return {
+      name: user.name || 'User',
+      role: userTitle,
+      location: userLocation,
+      status: userStatus,
+      completionPercentage: completionPercentage,
+      bio: user.bio || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      joinDate: userType === 'agent' ? `Licensed since ${user.experienceYears ? new Date().getFullYear() - user.experienceYears : '2020'}` : `Joined ${new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+    };
+  }
+
+  // Fallback to static data if no user data available
   switch (userType) {
     case "client":
       return {
@@ -142,10 +203,14 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
   collapsed,
   onToggle,
 }) => {
+  const { user } = useAuth();
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [currentTip, setCurrentTip] = useState(0);
-  const userProfile = getUserProfile(userType);
+  const userProfile = getUserProfile(userType, user);
   const sidebarItems = getSidebarItems(userType);
+  
+  // Use profile completion from userProfile
+  const completionPercentage = userProfile.completionPercentage;
 
   // Rotate daily tips every 10 seconds
   useEffect(() => {
@@ -260,14 +325,16 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
                     style={{ color: "#455A64" }}
                   >
                     <span>Profile Complete</span>
-                    <span>{userProfile.completionPercentage}%</span>
+                    <span>
+                      {`${completionPercentage}%`}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="h-2 rounded-full transition-all duration-300"
                       style={{
                         backgroundColor: "#0288D1",
-                        width: `${userProfile.completionPercentage}%`,
+                        width: `${completionPercentage}%`,
                       }}
                     />
                   </div>
@@ -435,6 +502,11 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
           style={{
             backgroundColor: "#F3E5F5",
             color: "#455A64",
+          }}
+          onClick={() => {
+            // Toggle AI Assistant visibility
+            const event = new CustomEvent('toggleAIAssistant');
+            window.dispatchEvent(event);
           }}
         >
           <div className="flex items-center space-x-3">

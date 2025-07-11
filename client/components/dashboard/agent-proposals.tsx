@@ -36,8 +36,11 @@ interface Proposal {
 }
 
 export function AgentProposals() {
-  const [selectedProposal, setSelectedProposal] = useState<number | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [messageText, setMessageText] = useState("");
 
   const proposals: Proposal[] = [
     {
@@ -121,9 +124,52 @@ export function AgentProposals() {
   };
 
   const acceptProposal = (proposalId: number) => {
-    alert(
-      `Proposal accepted! You'll be redirected to the contract and payment page.`,
-    );
+    // TODO: Implement actual accept logic
+    console.log("Accepting proposal:", proposalId);
+    // Show success toast
+    const toast = document.createElement("div");
+    toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
+    toast.textContent = "Proposal accepted successfully!";
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 3000);
+  };
+
+  const declineProposal = (proposalId: number) => {
+    // TODO: Implement actual decline logic
+    console.log("Declining proposal:", proposalId);
+    // Show info toast
+    const toast = document.createElement("div");
+    toast.className = "fixed top-4 right-4 bg-orange-500 text-white px-4 py-2 rounded shadow-lg z-50";
+    toast.textContent = "Proposal declined.";
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 3000);
+  };
+
+  const sendMessage = () => {
+    if (selectedProposal && messageText.trim()) {
+      // TODO: Implement actual message sending
+      console.log("Sending message:", messageText, "to", selectedProposal.agentName);
+      setShowMessageModal(false);
+      setMessageText("");
+      // Show success toast
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      toast.textContent = `Message sent to ${selectedProposal.agentName}!`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 3000);
+    }
   };
 
   return (
@@ -148,7 +194,15 @@ export function AgentProposals() {
           <Badge className="bg-sage-green-100 text-sage-green-700">
             {proposals.length} proposals received
           </Badge>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              // Show comparison modal with all proposals
+              alert(`Compare All Proposals\n\nShowing comparison of ${proposals.length} proposals:\n\n` +
+                proposals.map((p, i) => `${i+1}. ${p.agentName} - $${p.budget} - ${p.timeline}`).join('\n'));
+            }}
+          >
             <FileText className="w-4 h-4 mr-2" />
             Compare All
           </Button>
@@ -307,11 +361,25 @@ export function AgentProposals() {
                   </Button>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProposal(proposal);
+                        setShowMessageModal(true);
+                      }}
+                    >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Message
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProposal(proposal);
+                        setShowProfileModal(true);
+                      }}
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       View Profile
                     </Button>
@@ -321,6 +389,7 @@ export function AgentProposals() {
                     variant="ghost"
                     size="sm"
                     className="w-full text-red-600 hover:text-red-700"
+                    onClick={() => declineProposal(proposal.id)}
                   >
                     <X className="w-4 h-4 mr-2" />
                     Decline
@@ -346,8 +415,86 @@ export function AgentProposals() {
           <p className="text-cool-gray-600 mb-6">
             Post a request to start receiving proposals from agents
           </p>
-          <Button variant="premium">Post New Request</Button>
+          <Button 
+            variant="premium"
+            onClick={() => {
+              // Navigate to post request page
+              window.location.href = "#post-request";
+            }}
+          >
+            Post New Request
+          </Button>
         </motion.div>
+      )}
+
+      {/* Message Modal */}
+      {showMessageModal && selectedProposal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">
+              Send Message to {selectedProposal.agentName}
+            </h3>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type your message here..."
+              className="w-full p-3 border rounded-lg h-32 resize-none mb-4"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowMessageModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={sendMessage}>
+                Send Message
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && selectedProposal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">
+              {selectedProposal.agentName} - Profile
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <span className="font-medium">Experience:</span> {selectedProposal.experience}
+              </div>
+              <div>
+                <span className="font-medium">Rating:</span> ⭐ {selectedProposal.rating}/5
+              </div>
+              <div>
+                <span className="font-medium">Specialization:</span> Immigration Law
+              </div>
+              <div>
+                <span className="font-medium">Location:</span> New York, NY
+              </div>
+              <div>
+                <span className="font-medium">Languages:</span> English, Spanish
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowProfileModal(false)}
+              >
+                Close
+              </Button>
+              <Button onClick={() => {
+                setShowProfileModal(false);
+                setShowMessageModal(true);
+              }}>
+                Send Message
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

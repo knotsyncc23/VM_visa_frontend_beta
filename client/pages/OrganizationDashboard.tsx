@@ -65,8 +65,8 @@ export default function OrganizationDashboard() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState(8);
-  const [autoCollapseTimer, setAutoCollapseTimer] =
-    useState<NodeJS.Timeout | null>(null);
+  const [showAddAgentModal, setShowAddAgentModal] = useState(false);
+  const [autoCollapseTimer, setAutoCollapseTimer] = useState<NodeJS.Timeout | null>(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -301,6 +301,7 @@ export default function OrganizationDashboard() {
             <div className="flex items-center space-x-4">
               {/* Quick Actions */}
               <Button
+                onClick={() => setShowAddAgentModal(true)}
                 variant="outline"
                 size="sm"
                 className="border-gray-300"
@@ -312,6 +313,7 @@ export default function OrganizationDashboard() {
 
               {/* Notifications */}
               <Button
+                onClick={() => navigate("/notifications")}
                 variant="outline"
                 size="sm"
                 className="relative border-gray-300"
@@ -567,6 +569,103 @@ export default function OrganizationDashboard() {
                     className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                   >
                     Logout
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Agent Modal */}
+      <AnimatePresence>
+        {showAddAgentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowAddAgentModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            >
+              <div className="text-center">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: "#E3F2FD" }}
+                >
+                  <Users className="w-6 h-6 text-blue-500" />
+                </div>
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: "#455A64" }}
+                >
+                  Add New Agent
+                </h3>
+                <p
+                  className="text-sm mb-6"
+                  style={{ color: "#455A64", opacity: 0.7 }}
+                >
+                  Send an invitation to a new agent to join your organization.
+                </p>
+                
+                <div className="space-y-4 mb-6">
+                  <input
+                    type="email"
+                    placeholder="Agent email address"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                    style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Agent name"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                    style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
+                  />
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200"
+                    style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
+                  >
+                    <option value="">Select agent role</option>
+                    <option value="senior">Senior Agent</option>
+                    <option value="junior">Junior Agent</option>
+                    <option value="specialist">Specialist</option>
+                  </select>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={() => setShowAddAgentModal(false)}
+                    variant="outline"
+                    className="flex-1 border-gray-300"
+                    style={{ color: "#455A64" }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement actual invite logic
+                      setShowAddAgentModal(false);
+                      // Show success toast
+                      const toast = document.createElement("div");
+                      toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
+                      toast.textContent = "Invitation sent successfully!";
+                      document.body.appendChild(toast);
+                      setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                          document.body.removeChild(toast);
+                        }
+                      }, 3000);
+                    }}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Send Invitation
                   </Button>
                 </div>
               </div>

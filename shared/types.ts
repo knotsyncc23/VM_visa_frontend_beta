@@ -11,6 +11,56 @@ export interface User {
   isVerified?: boolean;
   createdAt: string;
   updatedAt: string;
+  
+  // Client-specific fields
+  phone?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  passportNumber?: string;
+  visaHistory?: string;
+  preferredCountries?: string[];
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  
+  // Agent-specific fields
+  title?: string;
+  specializations?: string[];
+  experienceYears?: number;
+  successRate?: number;
+  rating?: number;
+  responseTime?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  languages?: string[];
+  certifications?: string[];
+  hourlyRate?: number;
+  portfolio?: string[];
+  portfolioItems?: string[];
+  licenseNumber?: string;
+  availability?: string;
+  businessHours?: {
+    start: string;
+    end: string;
+    timezone: string;
+  };
+  rates?: {
+    consultation: number;
+    minimum: number;
+  };
+  acceptsUrgentCases?: boolean;
+  
+  // Organization-specific fields
+  organizationName?: string;
+  organizationType?: string;
+  registrationNumber?: string;
+  establishedYear?: number;
+  teamSize?: number;
+  services?: string[];
+  clientTestimonials?: any[];
 }
 
 export interface VisaRequest {
@@ -31,22 +81,51 @@ export interface VisaRequest {
 
 export interface Proposal {
   id: string;
+  _id?: string; // Backend compatibility
   requestId: string;
   agentId: string;
-  agentName: string;
-  agentAvatar?: string;
-  agentRating: number;
   budget: number;
   timeline: string;
   coverLetter: string;
   proposalText: string;
-  experienceYears: number;
-  successRate: number;
-  responseTime: string;
+  milestones?: any[];
   portfolio: string[];
-  isVerified: boolean;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
   submittedAt: string;
+  respondedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  
+  // Populated fields from virtuals
+  agent?: {
+    _id: string;
+    name: string;
+    email: string;
+    title?: string;
+    rating?: number;
+    avatar?: string;
+    specializations?: string[];
+    experienceYears?: number;
+    successRate?: number;
+    responseTime?: string;
+    isVerified?: boolean;
+    bio?: string;
+    location?: string;
+    phone?: string;
+  };
+  
+  // Legacy properties for backward compatibility
+  agentName?: string;
+  agentAvatar?: string;
+  agentRating?: number;
+  experienceYears?: number;
+  successRate?: number;
+  responseTime?: string;
+  isVerified?: boolean;
+  
+  // Computed properties
+  price?: number; // Alias for budget
+  description?: string; // Alias for proposalText
 }
 
 export interface Message {

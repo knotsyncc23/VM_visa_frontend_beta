@@ -23,6 +23,8 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('vm-visa-auth-token');
     
+    console.log('API Request:', endpoint, 'Token exists:', !!token);
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -32,14 +34,34 @@ class ApiClient {
       ...options,
     };
 
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Network error' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
-    }
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        // Handle 401 Unauthorized - token expired or invalid
+        if (response.status === 401) {
+          console.log('API: 401 Unauthorized - clearing auth data');
+          localStorage.removeItem('vm-visa-auth-token');
+          localStorage.removeItem('vm-visa-user-data');
+          
+          // Redirect to login if not already there
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          throw new Error('No authentication token found. Please log in again.');
+        }
+        
+        const error = await response.json().catch(() => ({ 
+          message: `HTTP ${response.status}: ${response.statusText}` 
+        }));
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      }
 
-    return response.json();
+      return response.json();
+    } catch (error) {
+      console.error('API Request failed:', endpoint, error);
+      throw error;
+    }
   }
 
   // Auth endpoints
@@ -75,10 +97,21 @@ class ApiClient {
 
   // User endpoints
   async updateProfile(data: Partial<User>): Promise<User> {
-    return this.request<User>('/users/profile', {
+    const response = await this.request<{success: boolean, data: {user: User}}>('/users/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+    return response.data.user;
+  }
+
+  async getUserProfile(userId: string): Promise<User> {
+    const response = await this.request<{success: boolean, data: {user: User}}>(`/users/profile/${userId}`);
+    return response.data.user;
+  }
+
+  async getUserReviews(userId: string): Promise<Review[]> {
+    const response = await this.request<{success: boolean, data: {data: Review[]}}>(`/reviews/user/${userId}`);
+    return response.data?.data || [];
   }
 
   // Dashboard endpoints
@@ -116,8 +149,24 @@ class ApiClient {
   // Proposals
   async getProposals(params?: any): Promise<Proposal[]> {
     const query = params ? `?${new URLSearchParams(params)}` : '';
-    const response = await this.request<{success: boolean, data: {data: Proposal[], total: number, page: number}}>(`/proposals${query}`);
-    return response.data?.data || [];
+    const response = await this.request<{success: boolean, data: {data: any[], total: number, page: number}}>(`/proposals${query}`);
+    const proposals = response.data?.data || [];
+    
+    // Map backend response to frontend format
+    return proposals.map(proposal => ({
+      ...proposal,
+      id: proposal._id || proposal.id,
+      agentId: proposal.agentId || proposal.agent?._id,
+      price: proposal.budget,
+      description: proposal.proposalText,
+      agentName: proposal.agent?.name,
+      agentRating: proposal.agent?.rating,
+      agentAvatar: proposal.agent?.avatar,
+      experienceYears: proposal.agent?.experienceYears,
+      successRate: proposal.agent?.successRate,
+      responseTime: proposal.agent?.responseTime,
+      isVerified: proposal.agent?.isVerified,
+    }));
   }
 
   async createProposal(data: CreateProposalData): Promise<Proposal> {
@@ -177,6 +226,23 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // Token validation
+  async validateToken(): Promise<boolean> {
+    try {
+      const token = localStorage.getItem('vm-visa-auth-token');
+      if (!token) {
+        return false;
+      }
+      
+      // Try to get profile - if it fails, token is invalid
+      await this.getProfile();
+      return true;
+    } catch (error) {
+      console.log('Token validation failed:', error);
+      return false;
+    }
   }
 }
 
@@ -308,6 +374,36 @@ export interface EscrowTransaction {
 export interface CreateEscrowData {
   proposalId: string;
   amount: number;
+}
+
+export interface Review {
+  id: string;
+  reviewer: User;
+  reviewee: string;
+  relatedTo: {
+    type: 'visa_request' | 'proposal' | 'service';
+    id: string;
+  };
+  rating: number;
+  title: string;
+  comment: string;
+  aspects: {
+    communication: number;
+    expertise: number;
+    timeliness: number;
+    professionalism: number;
+    value: number;
+  };
+  isVerified: boolean;
+  isPublic: boolean;
+  response?: {
+    comment: string;
+    date: string;
+  };
+  helpfulVotes: number;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

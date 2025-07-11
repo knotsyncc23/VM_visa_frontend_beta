@@ -425,11 +425,26 @@ export function BrowseAgents() {
 
             {/* Actions */}
             <div className="flex space-x-3">
-              <Button variant="premium" size="sm" className="flex-1 group">
+              <Button 
+                variant="premium" 
+                size="sm" 
+                className="flex-1 group"
+                onClick={() => {
+                  alert(`Starting conversation with ${agent.name}...`);
+                  window.location.href = `/messages?agent=${agent.id}`;
+                }}
+              >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Contact Agent
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  alert(`Opening profile for ${agent.name}...`);
+                  window.location.href = `/agent-profile?id=${agent.id}`;
+                }}
+              >
                 View Profile
               </Button>
             </div>

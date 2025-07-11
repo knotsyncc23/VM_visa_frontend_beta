@@ -151,12 +151,23 @@ export function IncomingRequests() {
       setIsLoading(true);
       const requestId = selectedRequestForProposal.id;
       
+      // Debug authentication
+      const token = localStorage.getItem('vm-visa-auth-token');
+      console.log('Token exists:', !!token);
+      console.log('User:', user);
+      console.log('Request ID:', requestId);
+      
+      if (!token) {
+        alert('No authentication token found. Please log in again.');
+        return;
+      }
+      
       // Use direct fetch for the simplified endpoint
       const response = await fetch('http://localhost:5000/api/proposals/simple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('vm-visa-auth-token')}`
         },
         body: JSON.stringify({
           requestId,
