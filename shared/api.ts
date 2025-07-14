@@ -26,7 +26,7 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('vm-visa-auth-token');
     
-    console.log('API Request:', endpoint, 'Token exists:', !!token);
+    console.log('🌐 API Request:', endpoint, 'Full URL:', url, 'Token exists:', !!token);
     
     const config: RequestInit = {
       headers: {
@@ -38,7 +38,9 @@ class ApiClient {
     };
 
     try {
+      console.log('🌐 Making fetch request to:', url);
       const response = await fetch(url, config);
+      console.log('🌐 Response received:', response.status, response.statusText);
       
       if (!response.ok) {
         // Handle 401 Unauthorized - token expired or invalid
@@ -60,9 +62,11 @@ class ApiClient {
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log('🌐 Response data:', result);
+      return result;
     } catch (error) {
-      console.error('API Request failed:', endpoint, error);
+      console.error('🌐 API Request failed:', endpoint, error);
       throw error;
     }
   }
@@ -232,72 +236,63 @@ class ApiClient {
   }
 
   // Cases
-  async getCases(): Promise<any[]> {
-    try {
-      const response = await this.request<{success: boolean, data: any[]}>('/cases');
-      return response.data || [];
-    } catch (error) {
-      console.warn('API getCases failed, using mock data:', error);
-      return await this.mockApi.getCases();
-    }
+  async getCases(params?: CaseQueryParams): Promise<Case[]> {
+    const queryString = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : '';
+    const response = await this.request<ApiResponse<Case[]>>(`/cases${queryString}`);
+    return response.data || [];
   }
 
-  async getCase(caseId: string): Promise<any> {
-    try {
-      const response = await this.request<{success: boolean, data: any}>(`/cases/${caseId}`);
-      return response.data;
-    } catch (error) {
-      console.warn('API getCase failed, using mock data:', error);
-      return await this.mockApi.getCase(caseId);
-    }
+  async getCase(id: string): Promise<Case> {
+    console.log('🚀 API.getCase called with id:', id);
+    console.log('🚀 About to make request to:', `/cases/${id}`);
+    const response = await this.request<ApiResponse<Case>>(`/cases/${id}`);
+    console.log('🚀 API.getCase response:', response);
+    return response.data;
   }
 
-  async updateMilestone(caseId: string, milestoneIndex: number, data: any): Promise<any> {
-    try {
-      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/milestones/${milestoneIndex}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      });
-    } catch (error) {
-      console.warn('API updateMilestone failed, using mock data:', error);
-      return await this.mockApi.updateMilestone(caseId, milestoneIndex, data);
-    }
+  async updateCaseMilestones(caseId: string, milestones: CaseMilestone[]): Promise<Case> {
+    const response = await this.request<ApiResponse<Case>>(`/cases/${caseId}/milestones`, {
+      method: 'PUT',
+      body: JSON.stringify({ milestones }),
+    });
+    return response.data;
   }
 
-  async approveMilestone(caseId: string, milestoneIndex: number, clientFeedback?: string): Promise<any> {
-    try {
-      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/milestones/${milestoneIndex}/approve`, {
-        method: 'PUT',
-        body: JSON.stringify({ clientFeedback }),
-      });
-    } catch (error) {
-      console.warn('API approveMilestone failed, using mock data:', error);
-      return await this.mockApi.approveMilestone(caseId, milestoneIndex, clientFeedback);
-    }
+  async updateMilestoneStatus(caseId: string, milestoneIndex: number, status: MilestoneStatus, agentNotes?: string, submittedFiles?: string[]): Promise<Case> {
+    const response = await this.request<ApiResponse<Case>>(`/cases/${caseId}/milestones/${milestoneIndex}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, agentNotes, submittedFiles }),
+    });
+    return response.data;
   }
 
-  async addCaseNote(caseId: string, note: string): Promise<any> {
-    try {
-      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/notes`, {
-        method: 'POST',
-        body: JSON.stringify({ note }),
-      });
-    } catch (error) {
-      console.warn('API addCaseNote failed, using mock data:', error);
-      return await this.mockApi.addCaseNote(caseId, note);
-    }
+  async approveMilestone(caseId: string, milestoneIndex: number, action: 'approve' | 'reject', clientFeedback?: string): Promise<Case> {
+    const response = await this.request<ApiResponse<Case>>(`/cases/${caseId}/milestones/${milestoneIndex}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, clientFeedback }),
+    });
+    return response.data;
   }
 
-  async uploadCaseDocument(caseId: string, documentData: any): Promise<any> {
-    try {
-      return this.request<{success: boolean, data: any}>(`/cases/${caseId}/documents`, {
-        method: 'POST',
-        body: JSON.stringify(documentData),
-      });
-    } catch (error) {
-      console.warn('API uploadCaseDocument failed, using mock data:', error);
-      return await this.mockApi.uploadCaseDocument(caseId, documentData);
-    }
+  async makeMilestonePayment(caseId: string, milestoneIndex: number, paymentMethod: PaymentMethod, paymentDetails?: any): Promise<{ case: Case; payment: any }> {
+    const response = await this.request<ApiResponse<{ case: Case; payment: any }>>(`/cases/${caseId}/milestones/${milestoneIndex}/payment`, {
+      method: 'POST',
+      body: JSON.stringify({ paymentMethod, paymentDetails }),
+    });
+    return response.data;
+  }
+
+  async updateCaseNotes(caseId: string, notes: string, type: 'client' | 'agent'): Promise<Case> {
+    const response = await this.request<ApiResponse<Case>>(`/cases/${caseId}/notes`, {
+      method: 'PUT',
+      body: JSON.stringify({ notes, type }),
+    });
+    return response.data;
+  }
+
+  async getCaseTimeline(caseId: string): Promise<CaseTimelineResponse> {
+    const response = await this.request<ApiResponse<CaseTimelineResponse>>(`/cases/${caseId}/timeline`);
+    return response.data;
   }
 
   // Token validation
@@ -483,4 +478,114 @@ export interface Review {
  */
 export interface DemoResponse {
   message: string;
+}
+
+export interface Case {
+  _id: string;
+  requestId: {
+    _id: string;
+    title: string;
+    visaType: string;
+    country: string;
+    priority?: string;
+  };
+  proposalId: string;
+  clientId: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  agentId: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    isVerified: boolean;
+  };
+  status: 'active' | 'on-hold' | 'completed' | 'cancelled' | 'disputed';
+  priority?: string;
+  progress: number;
+  totalAmount: number;
+  paidAmount: number;
+  milestones: CaseMilestone[];
+  timeline: CaseTimelineEntry[];
+  startDate: string;
+  estimatedCompletionDate: string;
+  lastActivity: string;
+  clientNotes?: string;
+  agentNotes?: string;
+  tags?: string[];
+  metadata?: any;
+}
+
+export interface CaseMilestone {
+  _id?: string;
+  title: string;
+  description: string;
+  amount: number;
+  order: number;
+  status: MilestoneStatus;
+  isActive: boolean;
+  dueDate: string;
+  startedAt?: string;
+  completedAt?: string;
+  approvedAt?: string;
+  deliverables: string[];
+  submittedFiles: string[];
+  clientFeedback?: string;
+  agentNotes?: string;
+}
+
+export type MilestoneStatus = 'pending' | 'in-progress' | 'completed' | 'approved' | 'rejected';
+
+export interface CaseTimelineEntry {
+  _id?: string;
+  action: string;
+  description: string;
+  performedBy: string;
+  performedAt: string;
+  data?: any;
+}
+
+export interface CaseTimelineResponse {
+  case: Case;
+  timeline: CaseTimelineEntry[];
+  payments: PaymentRecord[];
+  paymentSummary: {
+    totalPaid: number;
+    totalAmount: number;
+    remainingAmount: number;
+    paymentsCount: number;
+    lastPaymentDate?: string;
+  };
+}
+
+export interface PaymentRecord {
+  paymentId: string;
+  amount: number;
+  milestoneTitle: string;
+  milestoneIndex: number;
+  paymentMethod: PaymentMethod;
+  processedAt: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
+export type PaymentMethod = 'credit_card' | 'bank_transfer' | 'paypal' | 'crypto';
+
+export interface CaseQueryParams {
+  page?: string;
+  limit?: string;
+  status?: string;
+  agentId?: string;
+  clientId?: string;
+  sort?: string;
+  order?: string;
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
 }

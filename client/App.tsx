@@ -57,7 +57,7 @@ import EscrowDashboard from "./pages/EscrowDashboard";
 import AdminEscrowPage from "./pages/AdminEscrowPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
-import { CaseDetailPage } from "./pages/CaseDetailPage";
+import CaseDetailPage from "./pages/CaseDetailPage";
 
 const queryClient = new QueryClient();
 

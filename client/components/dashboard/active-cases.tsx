@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/auth-context';
-import { api } from '../../../shared/api';
+import { api, Case } from '../../../shared/api';
 import {
   CheckCircle,
   Clock,
@@ -22,47 +22,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-interface ActiveCase {
-  _id: string;
-  requestId: {
-    _id: string;
-    title: string;
-    visaType: string;
-    country: string;
-    priority: string;
-  };
-  clientId?: {
-    _id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-  };
-  agentId?: {
-    _id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    isVerified: boolean;
-  };
-  status: string;
-  priority: string;
-  progress: number;
-  totalAmount: number;
-  paidAmount: number;
-  milestones: any[];
-  currentMilestone: number;
-  startDate: string;
-  estimatedCompletionDate: string;
-  lastActivity: string;
-  nextMilestone?: any;
-  overdueMilestones?: any[];
-}
-
 export function ActiveCases() {
   const { user } = useAuth();
-  const [cases, setCases] = useState<ActiveCase[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCase, setSelectedCase] = useState<ActiveCase | null>(null);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
 
   useEffect(() => {
     fetchCases();
@@ -71,10 +35,20 @@ export function ActiveCases() {
   const fetchCases = async () => {
     try {
       setLoading(true);
-      const casesData = await api.getCases();
-      setCases(casesData.filter((c: ActiveCase) => c.status === 'active'));
+      console.log('🔄 Fetching cases for user:', user?.id, 'userType:', user?.userType);
+      
+      const params = {
+        status: 'active',
+        ...(user?.userType === 'agent' && { agentId: user.id }),
+        ...(user?.userType === 'client' && { clientId: user.id })
+      };
+      
+      const casesData = await api.getCases(params);
+      console.log('📋 Fetched cases:', casesData);
+      setCases(casesData || []);
     } catch (error) {
-      console.error('Failed to fetch cases:', error);
+      console.error('❌ Failed to fetch cases:', error);
+      setCases([]);
     } finally {
       setLoading(false);
     }
@@ -107,20 +81,33 @@ export function ActiveCases() {
     });
   };
 
-  const handleViewCase = (caseItem: ActiveCase) => {
+  const getNextMilestone = (caseItem: Case) => {
+    return caseItem.milestones.find(m => m.isActive) || caseItem.milestones.find(m => m.status === 'pending');
+  };
+
+  const getOverdueMilestones = (caseItem: Case) => {
+    const now = new Date();
+    return caseItem.milestones.filter(m => 
+      m.status !== 'completed' && 
+      m.status !== 'approved' && 
+      new Date(m.dueDate) < now
+    );
+  };
+
+  const handleViewCase = (caseItem: Case) => {
     window.location.href = `/case/${caseItem._id}`;
   };
 
-  const handleMessageParty = (caseItem: ActiveCase) => {
+  const handleMessageParty = (caseItem: Case) => {
     const otherPartyId = user?.userType === 'client' ? caseItem.agentId?._id : caseItem.clientId?._id;
     window.location.href = `/messages?conversation=${caseItem._id}&participant=${otherPartyId}`;
   };
 
-  const handleViewDocuments = (caseItem: ActiveCase) => {
+  const handleViewDocuments = (caseItem: Case) => {
     window.location.href = `/documents?case=${caseItem._id}`;
   };
 
-  const handleScheduleCall = (caseItem: ActiveCase) => {
+  const handleScheduleCall = (caseItem: Case) => {
     window.location.href = `/calendar?case=${caseItem._id}&action=schedule`;
   };
 
@@ -173,7 +160,9 @@ export function ActiveCases() {
       <div className="grid gap-6">
         {cases.map((caseItem) => {
           const otherParty = user?.userType === 'client' ? caseItem.agentId : caseItem.clientId;
-          const isOverdue = caseItem.overdueMilestones && caseItem.overdueMilestones.length > 0;
+          const nextMilestone = getNextMilestone(caseItem);
+          const overdueMilestones = getOverdueMilestones(caseItem);
+          const isOverdue = overdueMilestones.length > 0;
           
           return (
             <motion.div
@@ -197,9 +186,11 @@ export function ActiveCases() {
                         <Badge className={cn("text-xs", getStatusColor(caseItem.status))}>
                           {caseItem.status}
                         </Badge>
-                        <Badge className={cn("text-xs", getPriorityColor(caseItem.priority))}>
-                          {caseItem.priority}
-                        </Badge>
+                        {caseItem.priority && (
+                          <Badge className={cn("text-xs", getPriorityColor(caseItem.priority))}>
+                            {caseItem.priority}
+                          </Badge>
+                        )}
                         {isOverdue && (
                           <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
                             <AlertCircle className="w-3 h-3 mr-1" />
@@ -242,15 +233,15 @@ export function ActiveCases() {
                       </div>
 
                       {/* Current Milestone */}
-                      {caseItem.nextMilestone && (
+                      {nextMilestone && (
                         <div className="bg-blue-50 rounded-lg p-3 mb-4">
                           <div className="flex items-center gap-2 mb-1">
                             <Activity className="w-4 h-4 text-blue-600" />
                             <span className="font-medium text-blue-800">Current Milestone</span>
                           </div>
-                          <p className="text-blue-700 text-sm">{caseItem.nextMilestone.title}</p>
+                          <p className="text-blue-700 text-sm">{nextMilestone.title}</p>
                           <p className="text-blue-600 text-xs mt-1">
-                            Due: {formatDate(caseItem.nextMilestone.dueDate)}
+                            Due: {formatDate(nextMilestone.dueDate)}
                           </p>
                         </div>
                       )}
@@ -346,7 +337,7 @@ export function ActiveCases() {
                     </div>
 
                     <div className="text-xs text-cool-gray-500">
-                      Last activity: {formatDate(caseItem.lastActivity)}
+                      Case ID: {caseItem._id.slice(-8).toUpperCase()}
                     </div>
                   </div>
                 </CardContent>

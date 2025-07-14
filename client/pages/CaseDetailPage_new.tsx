@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/auth-context';
-import { api, Case, CaseMilestone, MilestoneStatus, PaymentMethod, API_BASE_URL } from '../../shared/api';
+import { api, Case, CaseMilestone, MilestoneStatus, PaymentMethod } from '../../shared/api';
 import {
   ArrowLeft,
   Calendar,
@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 export default function CaseDetailPage() {
-  const { caseId } = useParams<{ caseId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [caseData, setCaseData] = useState<Case | null>(null);
@@ -39,37 +39,20 @@ export default function CaseDetailPage() {
   const [processingAction, setProcessingAction] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('🔍 CaseDetailPage useEffect triggered');
-    console.log('🔍 caseId parameter:', caseId);
-    console.log('🔍 caseId type:', typeof caseId);
-    console.log('🔍 user:', user);
-    console.log('🔍 Current URL:', window.location.href);
-    console.log('🔍 Current pathname:', window.location.pathname);
-    if (caseId) {
-      console.log('🔍 Calling fetchCaseDetails for caseId:', caseId);
+    if (id) {
       fetchCaseDetails();
-    } else {
-      console.log('🔍 No caseId parameter found - not calling fetchCaseDetails');
-      setLoading(false);
     }
-  }, [caseId]);
+  }, [id]);
 
   const fetchCaseDetails = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching case details for:', caseId);
-      console.log('🔄 API base URL:', API_BASE_URL);
-      console.log('🔄 About to call api.getCase with caseId:', caseId);
-      const data = await api.getCase(caseId!);
+      console.log('🔄 Fetching case details for:', id);
+      const data = await api.getCase(id!);
       console.log('📋 Case data received:', data);
       setCaseData(data);
     } catch (error) {
       console.error('❌ Failed to fetch case details:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
     } finally {
       setLoading(false);
     }
@@ -368,7 +351,20 @@ export default function CaseDetailPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-4">
+                      {otherParty.avatar ? (
+                        <img 
+                          src={otherParty.avatar} 
+                          alt={otherParty.name}
+                          className="w-12 h-12 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-royal-blue-100 flex items-center justify-center">
+                          <span className="text-royal-blue-600 font-medium text-lg">
+                            {otherParty.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <h3 className="font-semibold text-cool-gray-800">{otherParty.name}</h3>
                         <p className="text-sm text-cool-gray-600">{otherParty.email}</p>
