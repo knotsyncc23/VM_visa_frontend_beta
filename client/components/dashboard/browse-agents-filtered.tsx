@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ interface Agent {
 }
 
 export function BrowseAgentsFiltered() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVisaType, setSelectedVisaType] = useState("all");
   const [selectedCountry, setSelectedCountry] = useState("all");
@@ -451,7 +453,11 @@ export function BrowseAgentsFiltered() {
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Contact
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate(`/agent/${agent.id}`)}
+                  >
                     View Profile
                   </Button>
                 </div>

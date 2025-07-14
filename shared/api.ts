@@ -104,11 +104,11 @@ class ApiClient {
 
   // User endpoints
   async updateProfile(data: Partial<User>): Promise<User> {
-    const response = await this.request<{success: boolean, data: {user: User}}>('/users/profile', {
+    const response = await this.request<{success: boolean, data: User}>('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return response.data.user;
+    return response.data;
   }
 
   async getUserProfile(userId: string): Promise<User> {
@@ -330,6 +330,25 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  
+  // Notification settings
+  notificationSettings?: {
+    proposalUpdates: boolean;
+    messageAlerts: boolean;
+    deadlineReminders: boolean;
+    statusUpdates: boolean;
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  
+  // Privacy settings
+  privacySettings?: {
+    profileVisibility: 'public' | 'limited' | 'private';
+    showContactInfo: boolean;
+    allowDirectMessages: boolean;
+    shareProgressWithFamily: boolean;
+  };
 }
 
 export interface LoginCredentials {

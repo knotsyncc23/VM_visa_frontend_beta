@@ -72,7 +72,8 @@ export function DashboardOverview({
       change: `${visaRequests.length} total requests`,
       icon: FileText,
       color: "from-royal-blue-500 to-sky-blue-400",
-      trend: "up",
+      trend: "up" as const,
+      clickAction: () => onNavigate("my-requests"),
     },
     {
       label: "Proposals Received",
@@ -80,7 +81,8 @@ export function DashboardOverview({
       change: `${pendingProposals.length} pending review`,
       icon: Users,
       color: "from-sage-green-500 to-mint-green-400",
-      trend: "up",
+      trend: "up" as const,
+      clickAction: () => onNavigate("agent-proposals"),
     },
     {
       label: "Completed Cases",
@@ -88,7 +90,8 @@ export function DashboardOverview({
       change: localStats?.totalEarnings ? `$${localStats.totalEarnings} saved` : "Great progress!",
       icon: CheckCircle,
       color: "from-gold-500 to-sandstone-400",
-      trend: "neutral",
+      trend: "neutral" as const,
+      clickAction: () => onNavigate("active-cases"),
     },
   ];
 
@@ -239,7 +242,8 @@ export function DashboardOverview({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.6 }}
               whileHover={{ y: -2, scale: 1.01 }}
-              className={`h-auto glass-card p-4 rounded-xl transition-all duration-300 border ${
+              onClick={stat.clickAction}
+              className={`h-auto glass-card p-4 rounded-xl transition-all duration-300 border cursor-pointer ${
                 isActiveRequests
                   ? "border-royal-blue-200 hover:border-royal-blue-300 hover:shadow-lg"
                   : isProposalsReceived

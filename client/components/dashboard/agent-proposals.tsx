@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,8 +17,9 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
+import { api, Proposal as ApiProposal } from "@shared/api";
 
-interface Proposal {
+interface MockProposal {
   id: number;
   agentName: string;
   agentAvatar: string;
@@ -35,14 +37,22 @@ interface Proposal {
   submittedAt: Date;
 }
 
-export function AgentProposals() {
+interface AgentProposalsProps {
+  proposals?: ApiProposal[];
+  onProposalAccepted?: () => void;
+}
+
+export function AgentProposals({ proposals: realProposals = [], onProposalAccepted }: AgentProposalsProps) {
   const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [messageText, setMessageText] = useState("");
+  const [isAccepting, setIsAccepting] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const proposals: Proposal[] = [
+  // Use real proposals if available, otherwise use mock data for demo
+  const mockProposals: MockProposal[] = [
     {
       id: 1,
       agentName: "Sarah Chen",
@@ -106,13 +116,65 @@ export function AgentProposals() {
     },
   ];
 
-  const formatTimeAgo = (date: Date) => {
-    const diff = Date.now() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  // Helper function to normalize proposals for consistent rendering
+  const normalizeProposal = (proposal: any): MockProposal => {
+    // If it's already a MockProposal, return as is
+    if (proposal.agentName && proposal.submittedAt) {
+      return proposal;
+    }
+    
+    // Transform API proposal to mock proposal structure
+    return {
+      id: proposal.id || 0,
+      agentName: proposal.agentId || 'Unknown Agent',
+      agentAvatar: 'A',
+      agentRating: 4.5,
+      projectTitle: proposal.title || 'Visa Application',
+      proposalText: proposal.description || '',
+      timeline: proposal.timeline || '2-3 weeks',
+      budget: proposal.price || 0,
+      experienceYears: 5,
+      successRate: 95,
+      responseTime: '< 2 hours',
+      coverLetter: proposal.description || '',
+      portfolio: [],
+      isVerified: true,
+      submittedAt: new Date(proposal.createdAt || new Date())
+    };
+  };
 
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+  // Use real proposals if available, otherwise use mock data for demo
+  // Add safety checks to ensure proposals have required properties
+  const safeRealProposals = (realProposals || []).filter(p => 
+    p && p.id && p.agentId && p.createdAt
+  );
+  const normalizedRealProposals = safeRealProposals.map(normalizeProposal);
+  const displayProposals = normalizedRealProposals.length > 0 ? normalizedRealProposals : mockProposals;
+
+  const formatTimeAgo = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'Unknown';
+      }
+      
+      const diff = Date.now() - dateObj.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Unknown';
+    }
+  };
+
+  // Helper function to get the submission date from either mock or API proposal
+  const getSubmissionDate = (proposal: any) => {
+    return proposal.submittedAt || proposal.createdAt || new Date();
   };
 
   const toggleFavorite = (proposalId: number) => {
@@ -123,19 +185,60 @@ export function AgentProposals() {
     );
   };
 
-  const acceptProposal = (proposalId: number) => {
-    // TODO: Implement actual accept logic
-    console.log("Accepting proposal:", proposalId);
-    // Show success toast
-    const toast = document.createElement("div");
-    toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
-    toast.textContent = "Proposal accepted successfully!";
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      if (document.body.contains(toast)) {
-        document.body.removeChild(toast);
+  const acceptProposal = async (proposalId: string | number) => {
+    try {
+      setIsAccepting(proposalId.toString());
+      
+      // Call the actual API
+      const response = await api.acceptProposal(proposalId.toString());
+      
+      // Show success toast
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      toast.textContent = (response as any).message || "Proposal accepted successfully!";
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 3000);
+
+      // Handle navigation response from backend
+      const navigationData = (response as any).data?.navigation;
+      if (navigationData?.redirectTo) {
+        setTimeout(() => {
+          navigate(navigationData.redirectTo);
+        }, 1500); // Give time for user to see the success message
+      } else {
+        // Fallback navigation if backend doesn't specify
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
       }
-    }, 3000);
+
+      // Callback to refresh data
+      if (onProposalAccepted) {
+        onProposalAccepted();
+      }
+      
+    } catch (error) {
+      console.error("Error accepting proposal:", error);
+      
+      // Show error toast
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      toast.textContent = error instanceof Error ? error.message : "Failed to accept proposal. Please try again.";
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 5000);
+    } finally {
+      setIsAccepting(null);
+    }
   };
 
   const declineProposal = (proposalId: number) => {
@@ -192,15 +295,15 @@ export function AgentProposals() {
 
         <div className="mt-4 lg:mt-0 flex items-center space-x-3">
           <Badge className="bg-sage-green-100 text-sage-green-700">
-            {proposals.length} proposals received
+            {displayProposals.length} proposals received
           </Badge>
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => {
               // Show comparison modal with all proposals
-              alert(`Compare All Proposals\n\nShowing comparison of ${proposals.length} proposals:\n\n` +
-                proposals.map((p, i) => `${i+1}. ${p.agentName} - $${p.budget} - ${p.timeline}`).join('\n'));
+              alert(`Compare All Proposals\n\nShowing comparison of ${displayProposals.length} proposals:\n\n` +
+                displayProposals.map((p, i) => `${i+1}. ${p.agentName} - $${p.budget} - ${p.timeline}`).join('\n'));
             }}
           >
             <FileText className="w-4 h-4 mr-2" />
@@ -211,7 +314,7 @@ export function AgentProposals() {
 
       {/* Proposals List */}
       <div className="space-y-6">
-        {proposals.map((proposal, index) => (
+        {displayProposals.map((proposal, index) => (
           <motion.div
             key={proposal.id}
             initial={{ opacity: 0, y: 30 }}
@@ -355,9 +458,10 @@ export function AgentProposals() {
                     variant="premium"
                     className="w-full group"
                     onClick={() => acceptProposal(proposal.id)}
+                    disabled={isAccepting === proposal.id.toString()}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Accept Proposal
+                    {isAccepting === proposal.id.toString() ? "Accepting..." : "Accept Proposal"}
                   </Button>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -402,7 +506,7 @@ export function AgentProposals() {
       </div>
 
       {/* No Proposals State */}
-      {proposals.length === 0 && (
+      {displayProposals.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

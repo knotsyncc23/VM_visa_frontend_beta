@@ -294,7 +294,12 @@ export default function ClientDashboard() {
   const renderContent = () => {
     switch (currentView) {
       case "overview":
-        return <DashboardOverview onNavigate={(view: string) => setCurrentView(view as DashboardView)} />;
+        return <DashboardOverview 
+          onNavigate={(view: string) => setCurrentView(view as DashboardView)}
+          dashboardStats={dashboardStats}
+          visaRequests={visaRequests}
+          proposals={proposals}
+        />;
       case "my-requests":
         return <MyRequests />;
       case "active-cases":
@@ -306,11 +311,35 @@ export default function ClientDashboard() {
       case "browse-agents":
         return <BrowseAgentsFiltered />;
       case "agent-proposals":
-        return <AgentProposals />;
+        return <AgentProposals 
+          proposals={proposals} 
+          onProposalAccepted={() => {
+            // Refresh proposals data when one is accepted
+            const fetchProposals = async () => {
+              try {
+                if (visaRequests.length > 0) {
+                  const requestIds = visaRequests.map(req => req.id);
+                  const proposalsData = await api.getProposals({ 
+                    visaRequestIds: requestIds.join(',') 
+                  });
+                  setProposals(Array.isArray(proposalsData) ? proposalsData : []);
+                }
+              } catch (error) {
+                console.error('Failed to refresh proposals:', error);
+              }
+            };
+            fetchProposals();
+          }} 
+        />;
       case "settings":
         return <div className="p-6"><h2 className="text-2xl font-bold">Settings</h2><p>Settings panel coming soon...</p></div>;
       default:
-        return <DashboardOverview onNavigate={(view: string) => setCurrentView(view as DashboardView)} />;
+        return <DashboardOverview 
+          onNavigate={(view: string) => setCurrentView(view as DashboardView)}
+          dashboardStats={dashboardStats}
+          visaRequests={visaRequests}
+          proposals={proposals}
+        />;
     }
   };
 

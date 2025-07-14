@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/dashboard/shared/BackButton";
 import { useAuth } from "@/components/auth/auth-context";
 import { api, User as UserType } from "@shared/api";
+import { useToast } from "@/hooks/use-toast";
 import {
   User,
   Bell,
@@ -44,6 +45,7 @@ interface SettingsSection {
 
 const ClientSettingsPage: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -64,18 +66,17 @@ const ClientSettingsPage: React.FC = () => {
   });
   
   const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    sms: false,
-    updates: true,
-    marketing: false,
     proposalUpdates: true,
     messageAlerts: true,
     deadlineReminders: true,
+    statusUpdates: true,
+    email: true,
+    push: true,
+    sms: false,
   });
   
   const [privacy, setPrivacy] = useState({
-    profileVisibility: "public",
+    profileVisibility: "public" as "public" | "limited" | "private",
     showContactInfo: false,
     allowDirectMessages: true,
     shareProgressWithFamily: false,
@@ -116,6 +117,16 @@ const ClientSettingsPage: React.FC = () => {
           relationship: ""
         }
       });
+
+      // Initialize notification settings from user data
+      if (clientUser.notificationSettings) {
+        setNotifications(clientUser.notificationSettings);
+      }
+
+      // Initialize privacy settings from user data
+      if (clientUser.privacySettings) {
+        setPrivacy(clientUser.privacySettings);
+      }
     }
   }, [user]);
 
@@ -155,11 +166,36 @@ const ClientSettingsPage: React.FC = () => {
   const handleProfileSave = async () => {
     try {
       setLoading(true);
-      await updateProfile(profileData);
+      
+      // Call the API to update profile
+      const updatedUser = await api.updateProfile(profileData);
+      
       // Show success message
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      toast.textContent = "Profile updated successfully!";
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 3000);
+      
     } catch (error) {
       console.error("Failed to update profile:", error);
+      
       // Show error message
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      toast.textContent = "Failed to update profile. Please try again.";
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 3000);
     } finally {
       setLoading(false);
     }
@@ -169,8 +205,60 @@ const ClientSettingsPage: React.FC = () => {
     setNotifications((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleNotificationSave = async () => {
+    try {
+      setLoading(true);
+      
+      await api.updateProfile({
+        notificationSettings: notifications
+      });
+      
+      toast({
+        title: "Success",
+        description: "Notification settings updated successfully",
+      });
+      
+    } catch (error) {
+      console.error("Failed to save notification settings:", error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to save notification settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePrivacyChange = (key: string, value: string | boolean) => {
     setPrivacy((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePrivacySave = async () => {
+    try {
+      setLoading(true);
+      
+      await api.updateProfile({
+        privacySettings: privacy
+      });
+      
+      toast({
+        title: "Success",
+        description: "Privacy settings updated successfully",
+      });
+      
+    } catch (error) {
+      console.error("Failed to save privacy settings:", error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to save privacy settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderProfileSettings = () => (
@@ -416,6 +504,19 @@ const ClientSettingsPage: React.FC = () => {
           ))}
         </div>
       </div>
+      
+      <div className="pt-6 border-t border-gray-200">
+        <button
+          onClick={handleNotificationSave}
+          className="px-6 py-3 rounded-lg font-medium transition-colors"
+          style={{
+            backgroundColor: "#1976D2",
+            color: "white",
+          }}
+        >
+          Save Changes
+        </button>
+      </div>
     </div>
   );
 
@@ -464,6 +565,19 @@ const ClientSettingsPage: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+      
+      <div className="pt-6 border-t border-gray-200">
+        <button
+          onClick={handlePrivacySave}
+          className="px-6 py-3 rounded-lg font-medium transition-colors"
+          style={{
+            backgroundColor: "#1976D2",
+            color: "white",
+          }}
+        >
+          Save Changes
+        </button>
       </div>
     </div>
   );

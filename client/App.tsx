@@ -58,6 +58,7 @@ import AdminEscrowPage from "./pages/AdminEscrowPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 import CaseDetailPage from "./pages/CaseDetailPage";
+import AgentProfilePage from "./pages/AgentProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +83,7 @@ function AppContent() {
     "/tools",
     "/escrow",
     "/admin/escrow",
-  ].includes(location.pathname);
+  ].includes(location.pathname) || location.pathname.startsWith('/case/');
 
   return (
     <>
@@ -256,6 +257,16 @@ function AppContent() {
                 allowedRoles={["client", "agent", "organization"]}
               >
                 <CaseDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/:agentId"
+            element={
+              <ProtectedRoute
+                allowedRoles={["client", "agent", "organization"]}
+              >
+                <AgentProfilePage />
               </ProtectedRoute>
             }
           />

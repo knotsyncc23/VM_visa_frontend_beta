@@ -741,11 +741,14 @@ export default function CaseDetailPage() {
                       )}
 
                       {/* Client Actions */}
-                      {isClient && milestone.status === 'completed' && (
+                      {isClient && ['in-progress', 'completed', 'pending_approval'].includes(milestone.status) && (
                         <div className="space-y-3">
                           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                             <p className="text-sm text-yellow-800 font-medium">
-                              🎉 Milestone completed! Please review and approve.
+                              {milestone.status === 'completed' 
+                                ? '🎉 Milestone completed! Please review and approve.'
+                                : '📋 Milestone in progress. Review progress and approve when ready.'
+                              }
                             </p>
                           </div>
                           <div className="flex gap-2">
