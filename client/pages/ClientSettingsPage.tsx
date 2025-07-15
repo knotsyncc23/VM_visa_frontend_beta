@@ -170,32 +170,25 @@ const ClientSettingsPage: React.FC = () => {
       // Call the API to update profile
       const updatedUser = await api.updateProfile(profileData);
       
-      // Show success message
-      const toast = document.createElement("div");
-      toast.className = "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50";
-      toast.textContent = "Profile updated successfully!";
-      document.body.appendChild(toast);
+      // Update the auth context with new user data
+      await updateProfile(updatedUser);
       
-      setTimeout(() => {
-        if (document.body.contains(toast)) {
-          document.body.removeChild(toast);
-        }
-      }, 3000);
+      // Show success message using toast hook
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully!",
+        variant: "default",
+      });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update profile:", error);
       
-      // Show error message
-      const toast = document.createElement("div");
-      toast.className = "fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50";
-      toast.textContent = "Failed to update profile. Please try again.";
-      document.body.appendChild(toast);
-      
-      setTimeout(() => {
-        if (document.body.contains(toast)) {
-          document.body.removeChild(toast);
-        }
-      }, 3000);
+      // Show error message using toast hook
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -27,6 +27,8 @@ class ApiClient {
     const token = localStorage.getItem('vm-visa-auth-token');
     
     console.log('🌐 API Request:', endpoint, 'Full URL:', url, 'Token exists:', !!token);
+    console.log('🌐 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('🌐 Base URL being used:', this.baseURL);
     
     const config: RequestInit = {
       headers: {
@@ -39,6 +41,7 @@ class ApiClient {
 
     try {
       console.log('🌐 Making fetch request to:', url);
+      console.log('🌐 Fetch config:', config);
       const response = await fetch(url, config);
       console.log('🌐 Response received:', response.status, response.statusText);
       
@@ -67,6 +70,20 @@ class ApiClient {
       return result;
     } catch (error) {
       console.error('🌐 API Request failed:', endpoint, error);
+      console.error('🌐 Error type:', error.constructor.name);
+      console.error('🌐 Error message:', error.message);
+      console.error('🌐 Full error object:', error);
+      
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.error('🌐 This is a network/CORS error. Possible causes:');
+        console.error('  - Backend server is not running');
+        console.error('  - CORS configuration issue');
+        console.error('  - Network connectivity problem');
+        console.error('  - Wrong URL being used');
+        console.error('🌐 Current API URL:', this.baseURL);
+      }
+      
       throw error;
     }
   }
@@ -295,6 +312,49 @@ class ApiClient {
     return response.data;
   }
 
+  // Calendar endpoints
+  async getCalendarEvents(params?: any): Promise<CalendarEvent[]> {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const response = await this.request<{success: boolean, data: CalendarEvent[]}>(`/calendar${query}`);
+    return response.data || [];
+  }
+
+  async createCalendarEvent(data: CreateCalendarEventData): Promise<CalendarEvent> {
+    const response = await this.request<{success: boolean, data: CalendarEvent}>('/calendar', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  }
+
+  async updateCalendarEvent(id: string, data: Partial<CreateCalendarEventData>): Promise<CalendarEvent> {
+    const response = await this.request<{success: boolean, data: CalendarEvent}>(`/calendar/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  }
+
+  async deleteCalendarEvent(id: string): Promise<void> {
+    await this.request<void>(`/calendar/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateParticipantStatus(eventId: string, participantId: string, status: 'accepted' | 'declined' | 'tentative'): Promise<CalendarEvent> {
+    const response = await this.request<{success: boolean, data: CalendarEvent}>(`/calendar/${eventId}/participants/${participantId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+    return response.data;
+  }
+
+  // Enhanced Dashboard endpoints
+  async getActiveApplications(): Promise<ActiveApplication[]> {
+    const response = await this.request<{success: boolean, data: ActiveApplication[]}>('/dashboard/active-applications');
+    return response.data || [];
+  }
+
   // Token validation
   async validateToken(): Promise<boolean> {
     try {
@@ -374,13 +434,26 @@ export interface AuthResponse {
 
 export interface DashboardStats {
   totalRequests: number;
-  activeProposals: number;
+  activeRequests: number;
+  completedRequests: number;
+  cancelledRequests: number;
+  activeCases: number;
   completedCases: number;
+  activeProposals: number;
+  completedProposals: number;
+  proposalsReceived: number;
+  pendingProposals: number;
+  acceptedProposals: number;
   totalEarnings: number;
   monthlyStats: Array<{
     month: string;
     value: number;
   }>;
+  recentActivity?: {
+    visaRequests: any[];
+    cases: any[];
+    messages: any[];
+  };
 }
 
 export interface VisaRequest {
@@ -607,4 +680,102 @@ export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  type: 'consultation' | 'document-review' | 'follow-up' | 'deadline' | 'other';
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled';
+  organizer: User;
+  participants: Array<{
+    user: User;
+    status: 'invited' | 'accepted' | 'declined' | 'tentative';
+    notified: boolean;
+  }>;
+  location: {
+    type: 'video-call' | 'phone' | 'in-person' | 'online';
+    details?: string;
+  };
+  relatedTo?: {
+    type: 'case' | 'proposal' | 'visa-request' | 'general';
+    id: string;
+  };
+  reminderSettings: {
+    enabled: boolean;
+    intervals: Array<'15min' | '30min' | '1hour' | '2hours' | '1day' | '1week'>;
+  };
+  recurring: {
+    enabled: boolean;
+    pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    endDate?: string;
+    exceptions?: string[];
+  };
+  meetingLink?: string;
+  agenda?: Array<{
+    item: string;
+    duration: number;
+    completed: boolean;
+  }>;
+  notes?: string;
+  attachments?: string[];
+  isPrivate: boolean;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCalendarEventData {
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  type?: 'consultation' | 'document-review' | 'follow-up' | 'deadline' | 'other';
+  participants?: Array<{
+    user: string;
+    status?: 'invited' | 'accepted' | 'declined' | 'tentative';
+  }>;
+  location?: {
+    type: 'video-call' | 'phone' | 'in-person' | 'online';
+    details?: string;
+  };
+  relatedTo?: {
+    type: 'case' | 'proposal' | 'visa-request' | 'general';
+    id: string;
+  };
+  reminderSettings?: {
+    enabled: boolean;
+    intervals: Array<'15min' | '30min' | '1hour' | '2hours' | '1day' | '1week'>;
+  };
+  recurring?: {
+    enabled: boolean;
+    pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    endDate?: string;
+    exceptions?: string[];
+  };
+  meetingLink?: string;
+  agenda?: Array<{
+    item: string;
+    duration: number;
+    completed?: boolean;
+  }>;
+  notes?: string;
+  attachments?: string[];
+  isPrivate?: boolean;
+  color?: string;
+}
+
+export interface ActiveApplication {
+  id: string;
+  title: string;
+  agent?: string;
+  client?: string;
+  status: string;
+  progress: number;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high';
+  type: 'case' | 'proposal' | 'visa-request';
 }

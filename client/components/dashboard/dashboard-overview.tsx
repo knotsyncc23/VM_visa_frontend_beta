@@ -38,38 +38,78 @@ export function DashboardOverview({
   const [clickedAction, setClickedAction] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(!dashboardStats);
   const [localStats, setLocalStats] = useState<DashboardStats | null>(dashboardStats || null);
+  const [activeApplications, setActiveApplications] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!dashboardStats && user) {
-      const fetchStats = async () => {
-        try {
-          setIsLoading(true);
-          const stats = await api.getDashboardStats();
-          setLocalStats(stats);
-        } catch (error) {
-          console.error('Failed to fetch dashboard stats:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchStats();
-    } else {
-      setLocalStats(dashboardStats);
-      setIsLoading(false);
-    }
-  }, [dashboardStats, user]);
+    const fetchDashboardData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // Fetch dashboard stats, active applications, and recent activity in parallel
+        const [stats, applications] = await Promise.all([
+          dashboardStats ? Promise.resolve(dashboardStats) : api.getDashboardStats(),
+          api.getActiveApplications()
+        ]);
+        
+        setLocalStats(stats);
+        setActiveApplications(applications);
+        
+        // Simulate recent activity - in a real app this would come from the API
+        setRecentActivity([
+          {
+            type: "proposal",
+            message: "New proposal received for Canada PR",
+            time: "2 hours ago",
+            icon: Users,
+            color: "text-sage-green-600",
+          },
+          {
+            type: "document",
+            message: "Passport copy uploaded successfully",
+            time: "4 hours ago",
+            icon: Upload,
+            color: "text-royal-blue-600",
+          },
+          {
+            type: "message",
+            message: "New message from immigration advisor",
+            time: "1 day ago",
+            icon: MessageCircle,
+            color: "text-gold-600",
+          },
+          {
+            type: "progress",
+            message: "Application status updated to 'Under Review'",
+            time: "2 days ago",
+            icon: Clock,
+            color: "text-cool-gray-600",
+          },
+        ]);
+        
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const activeRequests = visaRequests.filter(req => req.status === 'open' || req.status === 'in_progress');
-  const completedRequests = visaRequests.filter(req => req.status === 'completed');
-  const pendingProposals = proposals.filter(prop => prop.status === 'pending');
-  const acceptedProposals = proposals.filter(prop => prop.status === 'accepted');
+    fetchDashboardData();
+    
+    // Set up polling for real-time updates every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    
+    return () => clearInterval(interval);
+  }, [user, dashboardStats]);
 
   const stats = [
     {
       label: "Active Requests",
-      value: activeRequests.length.toString(),
-      change: `${visaRequests.length} total requests`,
+      value: localStats?.activeRequests?.toString() || "0",
+      change: `${localStats?.totalRequests || 0} total requests`,
       icon: FileText,
       color: "from-royal-blue-500 to-sky-blue-400",
       trend: "up" as const,
@@ -77,8 +117,8 @@ export function DashboardOverview({
     },
     {
       label: "Proposals Received",
-      value: proposals.length.toString(),
-      change: `${pendingProposals.length} pending review`,
+      value: localStats?.proposalsReceived?.toString() || "0",
+      change: `${localStats?.pendingProposals || 0} pending review`,
       icon: Users,
       color: "from-sage-green-500 to-mint-green-400",
       trend: "up" as const,
@@ -86,73 +126,12 @@ export function DashboardOverview({
     },
     {
       label: "Completed Cases",
-      value: completedRequests.length.toString(),
+      value: localStats?.completedCases?.toString() || "0",
       change: localStats?.totalEarnings ? `$${localStats.totalEarnings} saved` : "Great progress!",
       icon: CheckCircle,
       color: "from-gold-500 to-sandstone-400",
       trend: "neutral" as const,
       clickAction: () => onNavigate("active-cases"),
-    },
-  ];
-
-  const recentActivity = [
-    {
-      type: "proposal",
-      message: "New proposal from Sarah Chen for Canada PR",
-      time: "2 hours ago",
-      icon: Users,
-      color: "text-sage-green-600",
-    },
-    {
-      type: "document",
-      message: "Passport copy uploaded successfully",
-      time: "4 hours ago",
-      icon: Upload,
-      color: "text-royal-blue-600",
-    },
-    {
-      type: "message",
-      message: "New message from immigration advisor",
-      time: "1 day ago",
-      icon: MessageCircle,
-      color: "text-gold-600",
-    },
-    {
-      type: "progress",
-      message: "Application status updated to 'Under Review'",
-      time: "2 days ago",
-      icon: Clock,
-      color: "text-cool-gray-600",
-    },
-  ];
-
-  const activeApplications = [
-    {
-      id: 1,
-      title: "Canada Permanent Residence",
-      agent: "Sarah Chen",
-      status: "Documents Review",
-      progress: 75,
-      dueDate: "Dec 15, 2024",
-      priority: "high",
-    },
-    {
-      id: 2,
-      title: "UK Student Visa",
-      agent: "James Wilson",
-      status: "Application Submitted",
-      progress: 90,
-      dueDate: "Jan 10, 2025",
-      priority: "medium",
-    },
-    {
-      id: 3,
-      title: "Australia Work Permit",
-      agent: "Maria Rodriguez",
-      status: "Initial Review",
-      progress: 45,
-      dueDate: "Feb 20, 2025",
-      priority: "low",
     },
   ];
 
@@ -199,10 +178,10 @@ export function DashboardOverview({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-xl lg:text-2xl font-heading font-bold text-cool-gray-800 mb-2">
-              Welcome back, John! 👋
+              Welcome back, {user?.name || 'User'}! 👋
             </h1>
             <p className="text-base text-cool-gray-600 mb-3">
-              You have 3 active applications and 5 new messages from agents.
+              You have {localStats?.activeCases || 0} active applications and {localStats?.recentActivity?.messages?.length || 0} new messages.
             </p>
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-sage-green-100 text-sage-green-700">
