@@ -229,16 +229,16 @@ export default function CaseDetailPage() {
           
           <div className="flex-1">
             <h1 className="text-3xl font-heading font-bold text-cool-gray-800">
-              {caseData.requestId.title}
+              {caseData.requestId?.title || 'Case Details'}
             </h1>
             <div className="flex items-center gap-4 mt-2 text-sm text-cool-gray-600">
               <div className="flex items-center gap-1">
                 <FileText className="w-4 h-4" />
-                {caseData.requestId.visaType.replace('-', ' ').toUpperCase()}
+                {caseData.requestId?.visaType ? caseData.requestId.visaType.replace('-', ' ').toUpperCase() : 'N/A'}
               </div>
               <div className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
-                {caseData.requestId.country}
+                {caseData.requestId?.country || 'N/A'}
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
@@ -312,24 +312,24 @@ export default function CaseDetailPage() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-cool-gray-600">Total Milestones:</span>
-                          <span className="ml-2 font-medium">{caseData.milestones.length}</span>
+                          <span className="ml-2 font-medium">{caseData.milestones?.length || 0}</span>
                         </div>
                         <div>
                           <span className="text-cool-gray-600">Completed:</span>
                           <span className="ml-2 font-medium text-green-600">
-                            {caseData.milestones.filter(m => m.status === 'approved').length}
+                            {caseData.milestones?.filter(m => m.status === 'approved').length || 0}
                           </span>
                         </div>
                         <div>
                           <span className="text-cool-gray-600">In Progress:</span>
                           <span className="ml-2 font-medium text-blue-600">
-                            {caseData.milestones.filter(m => m.status === 'in-progress').length}
+                            {caseData.milestones?.filter(m => m.status === 'in-progress').length || 0}
                           </span>
                         </div>
                         <div>
                           <span className="text-cool-gray-600">Pending:</span>
                           <span className="ml-2 font-medium text-yellow-600">
-                            {caseData.milestones.filter(m => m.status === 'pending').length}
+                            {caseData.milestones?.filter(m => m.status === 'pending').length || 0}
                           </span>
                         </div>
                       </div>
@@ -440,15 +440,15 @@ export default function CaseDetailPage() {
                       {isAgent && (
                         <div className="space-y-2">
                           <div className="text-sm text-cool-gray-600">
-                            <span className="font-medium">Case Type:</span> {caseData.requestId.visaType}
+                            <span className="font-medium">Case Type:</span> {caseData.requestId?.visaType || 'N/A'}
                           </div>
                           <div className="text-sm text-cool-gray-600">
-                            <span className="font-medium">Destination:</span> {caseData.requestId.country}
+                            <span className="font-medium">Destination:</span> {caseData.requestId?.country || 'N/A'}
                           </div>
                           <div className="text-sm text-cool-gray-600">
                             <span className="font-medium">Priority:</span> 
-                            <Badge className="ml-2" variant={caseData.requestId.priority === 'urgent' ? 'destructive' : 'default'}>
-                              {caseData.requestId.priority}
+                            <Badge className="ml-2" variant={caseData.requestId?.priority === 'urgent' ? 'destructive' : 'default'}>
+                              {caseData.requestId?.priority || 'normal'}
                             </Badge>
                           </div>
                         </div>
@@ -613,7 +613,7 @@ export default function CaseDetailPage() {
               </Card>
 
               <div className="space-y-4">
-                {caseData.milestones.map((milestone, index) => (
+                {caseData.milestones?.map((milestone, index) => (
                   <Card key={index} className={cn(
                     "transition-all duration-300",
                     milestone.isActive && "ring-2 ring-royal-blue-500",
@@ -812,6 +812,14 @@ export default function CaseDetailPage() {
                     </CardContent>
                   </Card>
                 ))}
+                
+                {(!caseData.milestones || caseData.milestones.length === 0) && (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <p className="text-cool-gray-500">No milestones have been set for this case yet.</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}

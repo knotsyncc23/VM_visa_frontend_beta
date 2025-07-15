@@ -285,6 +285,7 @@ class ApiClient {
   }
 
   async updateCaseMilestones(caseId: string, milestones: CaseMilestone[]): Promise<Case> {
+    console.log('🚀 updateCaseMilestones called with:', { caseId, milestonesCount: milestones.length, firstMilestone: milestones[0] });
     const response = await this.request<ApiResponse<Case>>(`/cases/${caseId}/milestones`, {
       method: 'PUT',
       body: JSON.stringify({ milestones }),
