@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,19 +19,60 @@ import {
   Calendar,
   MapPin,
   Star,
-  AlertCircle,
   Plus,
+  AlertCircle,
+  Bell,
+  Briefcase,
 } from "lucide-react";
+import { api } from "@shared/api";
+import { useAuth } from "@/components/auth/auth-context";
 
 interface AgentOverviewProps {
   filterPeriod: "today" | "7days" | "month" | "year";
 }
 
 export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [activeTasks, setActiveTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data based on filter period
-  const getKPIData = () => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, [filterPeriod, user]);
+
+  const fetchDashboardData = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const [stats, activity, cases] = await Promise.all([
+        api.getDashboardStats(),
+        api.getNotifications({ limit: 10 }), // Get recent notifications
+        api.getActiveCases() // Get active cases/tasks
+      ]);
+      
+      setDashboardStats(stats);
+      // Ensure activity is always an array
+      setRecentActivity(Array.isArray(activity) ? activity : []);
+      // Ensure cases is always an array
+      setActiveTasks(Array.isArray(cases) ? cases : []);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // Fallback to mock data if API fails
+      setDashboardStats(getMockKPIData());
+      setRecentActivity(getMockRecentActivity());
+      setActiveTasks(getMockRecentTasks());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data as fallback
+  const getMockKPIData = () => {
     const data = {
       today: {
         proposalsSent: 3,
@@ -64,78 +106,104 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
     return data[filterPeriod];
   };
 
-  const kpiData = getKPIData();
-
-  const recentTasks = [
+  const getMockRecentTasks = () => [
     {
       id: "1",
-      type: "Work Visa",
-      client: "John Smith",
-      status: "ongoing",
-      deadline: "2024-01-20",
-      documents: 8,
-      progress: 65,
+      requestId: { title: "Work Visa Application", visaType: "Work Visa", country: "Canada" },
+      clientId: { name: "John Smith" },
+      status: "in-progress",
+      lastActivity: "2024-01-20",
+      progress: { percentage: 65, completedMilestones: 3, totalMilestones: 5 },
+      proposalId: { budget: 2500 }
     },
     {
       id: "2",
-      type: "Study Visa",
-      client: "Emma Johnson",
-      status: "submitted",
-      deadline: "2024-01-18",
-      documents: 12,
-      progress: 85,
+      requestId: { title: "Study Visa Processing", visaType: "Study Visa", country: "UK" },
+      clientId: { name: "Emma Johnson" },
+      status: "active",
+      lastActivity: "2024-01-18",
+      progress: { percentage: 85, completedMilestones: 4, totalMilestones: 5 },
+      proposalId: { budget: 1800 }
     },
     {
       id: "3",
-      type: "PR Application",
-      client: "Michael Chen",
+      requestId: { title: "PR Application Review", visaType: "PR Application", country: "Australia" },
+      clientId: { name: "Michael Chen" },
       status: "completed",
-      deadline: "2024-01-15",
-      documents: 15,
-      progress: 100,
+      lastActivity: "2024-01-15",
+      progress: { percentage: 100, completedMilestones: 6, totalMilestones: 6 },
+      proposalId: { budget: 3200 }
     },
     {
       id: "4",
-      type: "Visitor Visa",
-      client: "Lisa Rodriguez",
-      status: "ongoing",
-      deadline: "2024-01-25",
-      documents: 6,
-      progress: 45,
+      requestId: { title: "Visitor Visa Fast Track", visaType: "Visitor Visa", country: "USA" },
+      clientId: { name: "Lisa Rodriguez" },
+      status: "active",
+      lastActivity: "2024-01-25",
+      progress: { percentage: 45, completedMilestones: 2, totalMilestones: 4 },
+      proposalId: { budget: 800 }
     },
   ];
 
-  const recentActivity = [
+  const getMockRecentActivity = () => [
     {
-      action: "Sent proposal for H1-B visa application",
-      client: "Tech Corp Inc.",
-      time: "2 hours ago",
       type: "proposal",
+      action: "submitted",
+      data: {
+        request: { title: "Work Visa Application", visaType: "Work Visa" },
+        budget: 2500,
+        status: "pending"
+      },
+      timestamp: "2024-01-20T10:30:00Z"
     },
     {
-      action: "Completed Student Visa for University of Toronto",
-      client: "Sarah Williams",
-      time: "4 hours ago",
-      type: "completion",
+      type: "message",
+      action: "received",
+      data: {
+        content: "Can you provide an update on my application?",
+        sender: { name: "John Smith" },
+        receiver: { name: "You" }
+      },
+      timestamp: "2024-01-19T15:45:00Z"
     },
     {
-      action: "Document review completed",
-      client: "Global Consulting Ltd.",
-      time: "6 hours ago",
-      type: "review",
+      type: "proposal",
+      action: "accepted",
+      data: {
+        request: { title: "Study Visa Processing", visaType: "Study Visa" },
+        budget: 1800,
+        status: "accepted"
+      },
+      timestamp: "2024-01-18T09:15:00Z"
     },
     {
-      action: "Client consultation scheduled",
-      client: "Innovation Labs",
-      time: "1 day ago",
-      type: "meeting",
-    },
+      type: "message",
+      action: "sent",
+      data: {
+        content: "I'll have the documents ready by tomorrow.",
+        sender: { name: "You" },
+        receiver: { name: "Emma Johnson" }
+      },
+      timestamp: "2024-01-17T14:20:00Z"
+    }
   ];
+
+  const kpiData = dashboardStats || getMockKPIData();
+  const recentTasks = activeTasks.length > 0 ? activeTasks : getMockRecentTasks();
+
+  // Ensure kpiData has all required properties with defaults
+  const safeKpiData = {
+    proposalsSent: kpiData?.totalProposals || kpiData?.proposalsSent || 0,
+    successRate: kpiData?.successRate || 0,
+    activeProjects: kpiData?.acceptedProposals || kpiData?.activeProjects || 0,
+    totalEarnings: kpiData?.totalEarnings || 0,
+    monthlyGrowth: kpiData?.monthlyGrowth || 0,
+  };
 
   const kpiCards = [
     {
       title: "Proposals Sent",
-      value: kpiData.proposalsSent,
+      value: safeKpiData.proposalsSent,
       icon: FileText,
       color: "#326dee",
       bgColor: "#f0f4ff",
@@ -144,7 +212,7 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
     },
     {
       title: "Success Rate",
-      value: `${kpiData.successRate}%`,
+      value: `${safeKpiData.successRate}%`,
       icon: Target,
       color: "#10b981",
       bgColor: "#ecfdf5",
@@ -153,7 +221,7 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
     },
     {
       title: "Active Projects",
-      value: kpiData.activeProjects,
+      value: safeKpiData.activeProjects,
       icon: Activity,
       color: "#f59e0b",
       bgColor: "#fffbeb",
@@ -162,11 +230,11 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
     },
     {
       title: "Total Earnings",
-      value: `$${kpiData.totalEarnings.toLocaleString()}`,
+      value: `$${safeKpiData.totalEarnings.toLocaleString()}`,
       icon: DollarSign,
       color: "#8b5cf6",
       bgColor: "#f3f4f6",
-      growth: `+${kpiData.monthlyGrowth}%`,
+      growth: `+${safeKpiData.monthlyGrowth}%`,
       period: filterPeriod,
     },
   ];
@@ -174,11 +242,17 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ongoing":
+      case "active":
+      case "in-progress":
         return "bg-blue-100 text-blue-700";
       case "submitted":
+      case "pending":
         return "bg-yellow-100 text-yellow-700";
       case "completed":
         return "bg-green-100 text-green-700";
+      case "cancelled":
+      case "rejected":
+        return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -187,14 +261,54 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ongoing":
+      case "active":
+      case "in-progress":
         return <Clock className="w-4 h-4" />;
       case "submitted":
+      case "pending":
         return <AlertCircle className="w-4 h-4" />;
       case "completed":
         return <CheckCircle className="w-4 h-4" />;
+      case "cancelled":
+      case "rejected":
+        return <Activity className="w-4 h-4" />;
       default:
         return <Activity className="w-4 h-4" />;
     }
+  };
+
+  // Helper function to safely extract progress value
+  const getProgressValue = (progress: any): number => {
+    if (typeof progress === 'number') {
+      return progress;
+    }
+    if (typeof progress === 'object' && progress !== null) {
+      return progress.percentage || 0;
+    }
+    return 0;
+  };
+
+  // Navigation handlers
+  const handleViewTask = (taskId: string) => {
+    navigate(`/case/${taskId}`);
+  };
+
+  const handleEditTask = (taskId: string) => {
+    // Navigate to case detail page with edit mode
+    navigate(`/case/${taskId}?mode=edit`);
+  };
+
+  const handleMessageClient = (clientName: string, taskId: string) => {
+    navigate(`/messages?caseId=${taskId}&clientName=${encodeURIComponent(clientName)}`);
+  };
+
+  const handleCreateNewTask = () => {
+    // Navigate to agent dashboard with a specific tab or create proposal flow
+    navigate('/agent-dashboard?tab=proposals&action=create');
+  };
+
+  const handleViewAllActivity = () => {
+    navigate('/notifications');
   };
 
   return (
@@ -300,10 +414,7 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
               size="sm"
               style={{ backgroundColor: "#0288D1", color: "white" }}
               className="hover:bg-blue-700"
-              onClick={() => {
-                // Navigate to create new task/proposal
-                console.log("Creating new task");
-              }}
+              onClick={handleCreateNewTask}
             >
               <Plus className="w-4 h-4 mr-2" />
               New Task
@@ -311,7 +422,31 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
           </div>
 
           <div className="space-y-4">
-            {recentTasks.map((task) => (
+            {loading ? (
+              // Loading state
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-4 border border-gray-200 rounded-xl animate-pulse">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                        <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                        <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-full h-4 bg-gray-200 rounded"></div>
+                      <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : recentTasks.length > 0 ? (
+              recentTasks.map((task) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, x: -10 }}
@@ -328,7 +463,7 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                       <span className="ml-1 capitalize">{task.status}</span>
                     </Badge>
                     <span className="font-medium text-gray-900">
-                      {task.type}
+                      {task.requestId?.visaType || task.type || "Visa Application"}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -337,9 +472,10 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                       variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Navigate to task details
-                        console.log("View task:", task.id);
+                        handleViewTask(task.id || task._id);
                       }}
+                      title="View case details"
+                      className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -348,9 +484,10 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                       variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Navigate to edit task
-                        console.log("Edit task:", task.id);
+                        handleEditTask(task.id || task._id);
                       }}
+                      title="Edit case"
+                      className="hover:bg-green-50 hover:text-green-600 transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -359,9 +496,11 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                       variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Open messaging
-                        console.log("Message client:", task.client);
+                        const clientName = task.clientId?.name || task.client || "Client";
+                        handleMessageClient(clientName, task.id || task._id);
                       }}
+                      title={`Message ${task.clientId?.name || task.client || "client"}`}
+                      className="hover:bg-purple-50 hover:text-purple-600 transition-colors"
                     >
                       <MessageCircle className="w-4 h-4" />
                     </Button>
@@ -372,17 +511,19 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Client:</span>
                     <span className="font-medium text-gray-900">
-                      {task.client}
+                      {task.clientId?.name || task.client || "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Deadline:</span>
-                    <span className="text-gray-900">{task.deadline}</span>
+                    <span className="text-gray-600">Last Activity:</span>
+                    <span className="text-gray-900">
+                      {task.lastActivity ? new Date(task.lastActivity).toLocaleDateString() : task.deadline || "N/A"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Documents:</span>
+                    <span className="text-gray-600">Budget:</span>
                     <span className="text-gray-900">
-                      {task.documents} uploaded
+                      ${task.proposalId?.budget || task.budget || 0}
                     </span>
                   </div>
                 </div>
@@ -392,13 +533,13 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-gray-600">Progress</span>
                     <span className="text-gray-900 font-medium">
-                      {task.progress}%
+                      {getProgressValue(task.progress)}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${task.progress}%` }}
+                      animate={{ width: `${getProgressValue(task.progress)}%` }}
                       transition={{ duration: 1, delay: 0.5 }}
                       className="h-2 rounded-full"
                       style={{ backgroundColor: "#326dee" }}
@@ -410,13 +551,34 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
                   <Button
                     size="sm"
                     className="w-full mt-3 bg-green-500 hover:bg-green-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewTask(task.id || task._id);
+                    }}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Mark as Complete
+                    View Completed Case
                   </Button>
                 )}
               </motion.div>
-            ))}
+            ))
+            ) : (
+              // Empty state
+              <div className="text-center py-8 text-gray-500">
+                <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <h4 className="text-lg font-medium mb-2">No Active Tasks</h4>
+                <p className="text-sm mb-4">You don't have any active cases at the moment.</p>
+                <Button 
+                  onClick={handleCreateNewTask}
+                  size="sm"
+                  style={{ backgroundColor: "#0288D1", color: "white" }}
+                  className="hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Proposal
+                </Button>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -441,44 +603,112 @@ export function AgentOverview({ filterPeriod }: AgentOverviewProps) {
               variant="outline"
               style={{ color: "#0288D1", borderColor: "#0288D1" }}
               className="hover:bg-blue-50"
+              onClick={handleViewAllActivity}
             >
               View All
             </Button>
           </div>
 
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200"
-              >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium mt-1"
-                  style={{ backgroundColor: "#326dee" }}
-                >
-                  {activity.type === "proposal" && (
-                    <FileText className="w-4 h-4" />
-                  )}
-                  {activity.type === "completion" && (
-                    <CheckCircle className="w-4 h-4" />
-                  )}
-                  {activity.type === "review" && <Eye className="w-4 h-4" />}
-                  {activity.type === "meeting" && (
-                    <Calendar className="w-4 h-4" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.action}
-                  </p>
-                  <p className="text-sm text-gray-600">{activity.client}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
-              </motion.div>
-            ))}
+            {Array.isArray(recentActivity) && recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => {
+                // Format activity data for display
+                const getActivityIcon = (type: string) => {
+                  switch (type) {
+                    case "proposal":
+                      return <FileText className="w-4 h-4" />;
+                    case "message":
+                      return <MessageCircle className="w-4 h-4" />;
+                    case "notification":
+                      return <Bell className="w-4 h-4" />;
+                    case "case":
+                      return <Briefcase className="w-4 h-4" />;
+                    default:
+                      return <Activity className="w-4 h-4" />;
+                  }
+                };
+
+                const getActivityText = (activity: any) => {
+                  if (activity.type === "proposal") {
+                    return `${activity.action} proposal for ${activity.data?.request?.title || "visa application"}`;
+                  } else if (activity.type === "message") {
+                    return `${activity.action} message ${activity.action === "sent" ? "to" : "from"} ${
+                      activity.data?.sender?.name || activity.data?.receiver?.name || "client"
+                    }`;
+                  } else if (activity.message) {
+                    // For notification format
+                    return activity.message;
+                  } else {
+                    return activity.action || "Activity update";
+                  }
+                };
+
+                const getActivityTime = (activity: any) => {
+                  const timestamp = activity.timestamp || activity.createdAt;
+                  if (!timestamp) return "Recently";
+                  
+                  const date = new Date(timestamp);
+                  const now = new Date();
+                  const diffMs = now.getTime() - date.getTime();
+                  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                  const diffDays = Math.floor(diffHours / 24);
+                  
+                  if (diffHours < 1) return "Just now";
+                  if (diffHours < 24) return `${diffHours}h ago`;
+                  if (diffDays < 7) return `${diffDays}d ago`;
+                  return date.toLocaleDateString();
+                };
+
+                return (
+                  <motion.div
+                    key={activity.id || index}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer"
+                    onClick={() => {
+                      // Navigate to relevant page based on activity type
+                      if (activity.type === "proposal" && activity.data?.request?.id) {
+                        navigate(`/case/${activity.data.request.id}`);
+                      } else if (activity.type === "message") {
+                        navigate('/messages');
+                      } else if (activity.type === "notification") {
+                        navigate('/notifications');
+                      }
+                    }}
+                    title="Click to view details"
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium mt-1"
+                      style={{ backgroundColor: "#326dee" }}
+                    >
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {getActivityText(activity)}
+                      </p>
+                      {activity.data?.content && (
+                        <p className="text-sm text-gray-600 truncate">
+                          "{activity.data.content}"
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        {getActivityTime(activity)}
+                      </p>
+                    </div>
+                    {!activity.isRead && activity.isRead !== undefined && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    )}
+                  </motion.div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>No recent activity</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

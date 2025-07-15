@@ -149,6 +149,19 @@ class ApiClient {
     return response.data || [];
   }
 
+  // Get notifications for recent activity
+  async getNotifications(params?: { page?: number; limit?: number; isRead?: boolean }): Promise<any[]> {
+    const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
+    const response = await this.request<{success: boolean, data: { notifications: any[], pagination: any }}>(`/dashboard/notifications${query}`);
+    return response.data?.notifications || [];
+  }
+
+  // Get active cases/tasks for the current user
+  async getActiveCases(): Promise<any[]> {
+    const response = await this.request<{success: boolean, data: any[]}>('/cases/active');
+    return response.data || [];
+  }
+
   // Visa requests
   async getVisaRequests(params?: any): Promise<VisaRequest[]> {
     const query = params ? `?${new URLSearchParams(params)}` : '';
@@ -198,6 +211,10 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  async getProposal(proposalId: string): Promise<Proposal> {
+    return this.request<Proposal>(`/proposals/${proposalId}`);
   }
 
   async acceptProposal(proposalId: string): Promise<{success: boolean, data: Proposal}> {

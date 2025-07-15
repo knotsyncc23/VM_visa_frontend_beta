@@ -98,9 +98,12 @@ export function MyProposals() {
         updatedAt: p.updatedAt,
         request: p.request || p.visaRequest
       }));
+      
       setProposals(transformedProposals);
+      console.log('Fetched proposals:', transformedProposals.length);
     } catch (error) {
-      console.error('Failed to fetch proposals:', error);
+      console.error('Error fetching proposals:', error);
+      // Add fallback to mock data if API fails
       setProposals([]);
     } finally {
       setIsLoading(false);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,7 +23,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PostVisaRequest } from "./post-visa-request";
-import { AgentProfilePage } from "./agent-profile";
 import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
 import { VisaRequest } from "@shared/types";
@@ -39,6 +39,7 @@ interface ExtendedVisaRequest extends VisaRequest {
 
 export function MyRequests() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<ExtendedVisaRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showPostRequest, setShowPostRequest] = useState(false);
@@ -60,9 +61,7 @@ export function MyRequests() {
   const [selectedRequest, setSelectedRequest] = useState<ExtendedVisaRequest | null>(null);
   const [showEditRequest, setShowEditRequest] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<ExtendedVisaRequest & {budget: string, deadline: string}>>({});
-  const [showAgentProfile, setShowAgentProfile] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
+  // Note: showAgentProfile and related states removed since we now navigate to main page
 
   // Form options for edit modal
   const visaTypes = [
@@ -294,16 +293,15 @@ export function MyRequests() {
 
   // Handle viewing agent profile
   const handleViewAgentProfile = (agentId: string, proposalId?: string) => {
-    setSelectedAgentId(agentId);
-    setSelectedProposalId(proposalId || null);
-    setShowAgentProfile(true);
+    // Navigate to the main agent profile page with proposalId if provided
+    const url = `/agent/${agentId}${proposalId ? `?proposalId=${proposalId}` : ''}`;
+    navigate(url);
   };
 
-  // Handle back from agent profile
+  // Handle back from agent profile (no longer needed for navigation)
   const handleBackFromAgentProfile = () => {
-    setShowAgentProfile(false);
-    setSelectedAgentId(null);
-    setSelectedProposalId(null);
+    // This function is kept for compatibility but no longer used
+    // since we now navigate to the main agent profile page
   };
 
   // Handle viewing request details (placeholder)
@@ -502,17 +500,7 @@ export function MyRequests() {
     }
   };
 
-  // Show agent profile if selected
-  if (showAgentProfile && selectedAgentId) {
-    return (
-      <AgentProfilePage
-        agentId={selectedAgentId}
-        proposalId={selectedProposalId || undefined}
-        onBack={handleBackFromAgentProfile}
-        onMessage={handleMessageAgent}
-      />
-    );
-  }
+  // Note: Agent profile view now navigates to main page instead of embedded component
 
   if (showPostRequest) {
     return (

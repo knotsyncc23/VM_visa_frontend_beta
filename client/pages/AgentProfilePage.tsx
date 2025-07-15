@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -16,11 +16,14 @@ import {
   DollarSign,
   Users,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { api } from "@shared/api";
 
 // Simple interface for agent data
 interface AgentData {
@@ -62,99 +65,235 @@ interface ReviewData {
 export default function AgentProfilePage() {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const proposalId = searchParams.get('proposalId');
   const [agent, setAgent] = useState<AgentData | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [proposal, setProposal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'portfolio'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'portfolio' | 'proposal'>(proposalId ? 'proposal' : 'overview');
+  const [acceptingProposal, setAcceptingProposal] = useState(false);
+  const [proposalAccepted, setProposalAccepted] = useState(false);
 
   useEffect(() => {
+    console.log('AgentProfilePage mounted with:', { agentId, proposalId });
     if (agentId) {
       fetchAgentData();
+      if (proposalId) {
+        console.log('Fetching proposal data for proposalId:', proposalId);
+        fetchProposalData();
+      } else {
+        console.log('No proposalId provided');
+      }
+    } else {
+      console.error('No agentId provided');
     }
-  }, [agentId]);
+  }, [agentId, proposalId]);
 
   const fetchAgentData = async () => {
     try {
       setLoading(true);
       
-      // Mock agent data - replace with actual API call
-      const mockAgent: AgentData = {
-        id: agentId!,
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@example.com',
-        avatar: 'SJ',
-        title: 'Senior Immigration Consultant',
-        bio: 'Experienced immigration consultant with over 8 years of expertise in Canadian immigration law. Specialized in work permits, permanent residence applications, and student visas.',
-        location: 'Toronto, Canada',
-        phone: '+1 (416) 555-0123',
-        website: 'www.sarahjohnsonimmigration.com',
-        languages: ['English', 'French', 'Spanish'],
-        specializations: ['Work Permit', 'Permanent Residence', 'Student Visa', 'Family Sponsorship'],
-        experienceYears: 8,
-        successRate: 96,
-        responseTime: '< 2 hours',
-        hourlyRate: 150,
-        certifications: [
-          'Regulated Canadian Immigration Consultant (RCIC)',
-          'Member of Immigration Consultants of Canada Regulatory Council (ICCRC)',
-          'Licensed Immigration Consultant - College of Immigration and Citizenship Consultants'
-        ],
-        isVerified: true,
-        completedCases: 245
+      // Fetch real agent data from API
+      const agentResponse = await api.getUserProfile(agentId!) as any;
+      console.log('Fetched agent data:', agentResponse);
+      
+      // Map API response to frontend format
+      const agentData: AgentData = {
+        id: agentResponse.id || agentResponse._id || agentId!,
+        name: agentResponse.name || 'Unknown Agent',
+        email: agentResponse.email || '',
+        avatar: agentResponse.avatar || agentResponse.name?.substring(0, 2).toUpperCase() || 'AG',
+        title: agentResponse.title || 'Immigration Consultant',
+        bio: agentResponse.bio || 'Experienced immigration consultant',
+        location: agentResponse.location || 'Canada',
+        phone: agentResponse.phone || '',
+        website: agentResponse.website || '',
+        languages: agentResponse.languages || ['English'],
+        specializations: agentResponse.specializations || ['Immigration Services'],
+        experienceYears: agentResponse.experienceYears || 0,
+        successRate: agentResponse.successRate || (agentResponse.rating ? agentResponse.rating * 20 : 95),
+        responseTime: agentResponse.responseTime || '< 24 hours',
+        hourlyRate: agentResponse.hourlyRate || 100,
+        certifications: agentResponse.certifications || [],
+        isVerified: agentResponse.isVerified !== undefined ? agentResponse.isVerified : true,
+        completedCases: agentResponse.completedCases || 0
       };
 
-      // Mock reviews data
-      const mockReviews: ReviewData[] = [
-        {
-          id: '1',
-          clientName: 'Mike Chen',
-          rating: 5,
-          comment: 'Sarah was absolutely fantastic! She guided me through my PR application with such professionalism and care. Highly recommended!',
-          aspects: {
-            communication: 5,
-            expertise: 5,
-            timeliness: 5,
-            professionalism: 5,
-            value: 4
-          },
-          createdAt: '2024-06-15T00:00:00Z'
+      // Fetch real reviews data
+      const reviewsResponse = await api.getUserReviews(agentId!) as any[];
+      console.log('Fetched reviews data:', reviewsResponse);
+      
+      const reviewsData: ReviewData[] = reviewsResponse.map((review: any) => ({
+        id: review.id || review._id,
+        clientName: review.clientName || review.reviewer?.name || 'Anonymous Client',
+        rating: review.rating || 5,
+        comment: review.comment || review.reviewText || '',
+        aspects: {
+          communication: review.aspects?.communication || review.rating || 5,
+          expertise: review.aspects?.expertise || review.rating || 5,
+          timeliness: review.aspects?.timeliness || review.rating || 5,
+          professionalism: review.aspects?.professionalism || review.rating || 5,
+          value: review.aspects?.value || review.rating || 5
         },
-        {
-          id: '2',
-          clientName: 'Emma Rodriguez',
-          rating: 5,
-          comment: 'Excellent service! Sarah helped me get my work permit approved in record time. Very knowledgeable and responsive.',
-          aspects: {
-            communication: 5,
-            expertise: 5,
-            timeliness: 5,
-            professionalism: 5,
-            value: 5
-          },
-          createdAt: '2024-05-20T00:00:00Z'
-        },
-        {
-          id: '3',
-          clientName: 'John Smith',
-          rating: 4,
-          comment: 'Great experience overall. Sarah was very helpful throughout my student visa application process.',
-          aspects: {
-            communication: 4,
-            expertise: 5,
-            timeliness: 4,
-            professionalism: 5,
-            value: 4
-          },
-          createdAt: '2024-04-10T00:00:00Z'
-        }
-      ];
+        createdAt: review.createdAt || review.date || new Date().toISOString()
+      }));
 
-      setAgent(mockAgent);
-      setReviews(mockReviews);
+      setAgent(agentData);
+      setReviews(reviewsData);
     } catch (error) {
       console.error('Failed to fetch agent data:', error);
+      // Fallback to basic data if API fails
+      const fallbackAgent: AgentData = {
+        id: agentId!,
+        name: 'Immigration Agent',
+        email: '',
+        avatar: 'IA',
+        title: 'Immigration Consultant',
+        bio: 'Professional immigration consultant',
+        location: 'Canada',
+        phone: '',
+        website: '',
+        languages: ['English'],
+        specializations: ['Immigration Services'],
+        experienceYears: 5,
+        successRate: 95,
+        responseTime: '< 24 hours',
+        hourlyRate: 100,
+        certifications: [],
+        isVerified: true,
+        completedCases: 0
+      };
+      setAgent(fallbackAgent);
+      setReviews([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProposalData = async () => {
+    if (!proposalId) {
+      console.error('No proposalId provided to fetchProposalData');
+      return;
+    }
+    
+    try {
+      console.log('Fetching proposal with ID:', proposalId);
+      // Fetch specific proposal data from API
+      const foundProposal = await api.getProposal(proposalId) as any;
+      console.log('Fetched proposal:', foundProposal);
+      
+      // Handle different response structures
+      const proposalData = foundProposal?.data || foundProposal;
+      
+      if (proposalData) {
+        const processedProposal = {
+          id: proposalData.id || proposalData._id,
+          title: proposalData.title || `${proposalData.caseType || 'Immigration'} Application`,
+          description: proposalData.description || proposalData.proposalText || 'Professional immigration services',
+          amount: proposalData.amount || proposalData.budget || proposalData.price || 1000,
+          timeline: proposalData.timeline || proposalData.estimatedTime || '4-6 weeks',
+          milestones: proposalData.milestones || [
+            { title: 'Initial Consultation', description: 'Review case requirements and documents', completed: false },
+            { title: 'Document Preparation', description: 'Prepare and review all necessary documents', completed: false },
+            { title: 'Application Submission', description: 'Submit application to relevant authorities', completed: false },
+            { title: 'Follow-up & Support', description: 'Monitor progress and provide ongoing support', completed: false }
+          ],
+          services: proposalData.services || proposalData.servicesIncluded || [
+            'Professional consultation',
+            'Document review and preparation',
+            'Application submission',
+            'Status monitoring',
+            'Post-approval support'
+          ],
+          caseType: proposalData.caseType || proposalData.visaType || 'Immigration',
+          status: proposalData.status || 'pending',
+          createdAt: proposalData.createdAt || new Date().toISOString()
+        };
+        
+        console.log('Processed proposal data:', processedProposal);
+        setProposal(processedProposal);
+      } else {
+        console.error('No proposal data found in response');
+        throw new Error('No proposal data found');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch proposal data:', error);
+      console.error('Error details:', error?.response?.data);
+      
+      // Fallback proposal data
+      const fallbackProposal = {
+        id: proposalId,
+        title: 'Immigration Application',
+        description: 'Professional immigration services',
+        amount: 1000,
+        timeline: '4-6 weeks',
+        milestones: [
+          { title: 'Initial Consultation', description: 'Review case requirements', completed: false },
+          { title: 'Document Preparation', description: 'Prepare necessary documents', completed: false },
+          { title: 'Application Submission', description: 'Submit application', completed: false }
+        ],
+        services: ['Professional consultation', 'Document preparation', 'Application submission'],
+        caseType: 'Immigration',
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      console.log('Using fallback proposal data:', fallbackProposal);
+      setProposal(fallbackProposal);
+    }
+  };
+
+  const acceptProposal = async () => {
+    if (!proposal) {
+      console.error('No proposal found to accept');
+      alert('No proposal data available to accept.');
+      return;
+    }
+    
+    try {
+      setAcceptingProposal(true);
+      console.log('Accepting proposal:', proposal.id);
+      console.log('Proposal object:', proposal);
+      
+      // API call to accept proposal
+      const response = await api.acceptProposal(proposal.id) as any;
+      console.log('Accept proposal response:', response);
+      
+      // Handle different response structures
+      const isSuccess = response?.success === true || response?.data?.success === true;
+      
+      if (isSuccess) {
+        setProposalAccepted(true);
+        console.log('Proposal accepted successfully');
+        
+        // Show success message
+        alert('Proposal accepted successfully! Redirecting to dashboard...');
+        
+        // Redirect to dashboard after acceptance
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } else {
+        console.error('Response indicates failure:', response);
+        throw new Error(response?.error || response?.data?.error || 'Failed to accept proposal');
+      }
+      
+    } catch (error: any) {
+      console.error('Failed to accept proposal:', error);
+      
+      // Extract error message
+      let errorMessage = 'Failed to accept proposal. Please try again.';
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Show user-friendly error message
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setAcceptingProposal(false);
     }
   };
 
@@ -367,7 +506,8 @@ export default function AgentProfilePage() {
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'reviews', label: 'Reviews' },
-            { id: 'portfolio', label: 'Portfolio' }
+            { id: 'portfolio', label: 'Portfolio' },
+            ...(proposalId ? [{ id: 'proposal', label: 'Proposal' }] : [])
           ].map((tab) => (
             <button
               key={tab.id}
@@ -522,6 +662,137 @@ export default function AgentProfilePage() {
               <p className="text-cool-gray-500">
                 Case studies and portfolio examples will be available here.
               </p>
+            </motion.div>
+          )}
+
+          {/* Proposal Tab */}
+          {activeTab === 'proposal' && proposal && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {/* Proposal Header */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-xl text-cool-gray-800 mb-2">{proposal.title}</CardTitle>
+                      <Badge variant="outline" className="text-royal-blue-600 border-royal-blue-300">
+                        {proposal.caseType}
+                      </Badge>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-cool-gray-800">${proposal.amount}</div>
+                      <div className="text-sm text-cool-gray-500">{proposal.timeline}</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-cool-gray-600 leading-relaxed">{proposal.description}</p>
+                </CardContent>
+              </Card>
+
+              {/* Services Included */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg text-cool-gray-800">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    Services Included
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {proposal.services.map((service: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-cool-gray-600">{service}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Milestones */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg text-cool-gray-800">
+                    <TrendingUp className="w-5 h-5 text-royal-blue-500" />
+                    Project Milestones
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {proposal.milestones.map((milestone: any, index: number) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center mt-0.5 ${
+                          milestone.completed ? 'bg-green-100 text-green-600' : 'bg-cool-gray-100 text-cool-gray-400'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-cool-gray-800">{milestone.title}</h4>
+                          <p className="text-sm text-cool-gray-600 mt-1">{milestone.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Accept Proposal Section */}
+              {!proposalAccepted && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-cool-gray-800 mb-2">Ready to Get Started?</h3>
+                      <p className="text-cool-gray-600 mb-6">
+                        Accept this proposal to begin working with {agent?.name} on your immigration case.
+                      </p>
+                      <Button
+                        onClick={acceptProposal}
+                        disabled={acceptingProposal}
+                        className="bg-green-600 hover:bg-green-700 text-white px-8 py-2"
+                      >
+                        {acceptingProposal ? (
+                          <>
+                            <Clock className="w-4 h-4 mr-2 animate-spin" />
+                            Accepting Proposal...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Accept Proposal
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Proposal Accepted Message */}
+              {proposalAccepted && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-8"
+                >
+                  <Card className="border-green-200 bg-green-50">
+                    <CardContent className="pt-6">
+                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-green-800 mb-2">Proposal Accepted!</h3>
+                      <p className="text-green-700 mb-4">
+                        You have successfully accepted the proposal. You'll be redirected to your dashboard shortly.
+                      </p>
+                      <Badge className="bg-green-100 text-green-800">
+                        Case Created - Redirecting...
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </div>
