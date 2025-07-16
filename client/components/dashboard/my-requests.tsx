@@ -20,6 +20,7 @@ import {
   Grid,
   List,
   MoreVertical,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PostVisaRequest } from "./post-visa-request";
@@ -703,6 +704,57 @@ export function MyRequests() {
         </Button>
       </div>
 
+      {/* Request Summary - Only show if user has requests */}
+      {requests.length > 0 && (
+        <div className="glass-card p-6 rounded-2xl mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-cool-gray-800">
+                  {requests.length} Total Request{requests.length !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-cool-gray-600">
+                  {sortedRequests.length} matching current filters
+                </p>
+              </div>
+              
+              {/* Quick stats */}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-cool-gray-600">
+                    {requests.filter(r => r.status === 'pending').length} Pending
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span className="text-cool-gray-600">
+                    {requests.filter(r => r.status === 'in-progress').length} In Progress
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-cool-gray-600">
+                    {requests.filter(r => r.status === 'completed').length} Completed
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick add button for existing users */}
+            <Button
+              onClick={() => setShowPostRequest(true)}
+              variant="outline"
+              size="sm"
+              className="group"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Request
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Filters and Controls */}
       <div className="glass-card p-6 rounded-2xl mb-8">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
@@ -773,21 +825,51 @@ export function MyRequests() {
         >
           <FileText className="w-16 h-16 text-cool-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-cool-gray-700 mb-2">
-            No visa requests found
+            {requests.length === 0 
+              ? "No visa requests yet" 
+              : "No requests match your current filters"
+            }
           </h3>
           <p className="text-cool-gray-500 mb-6">
-            {searchQuery || filterStatus !== "all"
-              ? "Try adjusting your search or filters"
-              : "Start by creating your first visa request"}
+            {requests.length === 0
+              ? "Start by creating your first visa request to get matched with qualified immigration agents"
+              : "Try adjusting your search terms or filters to see more results"
+            }
           </p>
-          <Button
-            onClick={() => setShowPostRequest(true)}
-            variant="premium"
-            size="lg"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Create First Request
-          </Button>
+          
+          {/* Show different actions based on whether user has any requests */}
+          {requests.length === 0 ? (
+            <Button
+              onClick={() => setShowPostRequest(true)}
+              variant="premium"
+              size="lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Your First Request
+            </Button>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilterStatus("all");
+                }}
+                variant="outline"
+                size="lg"
+              >
+                <RefreshCw className="w-5 h-5 mr-2" />
+                Clear Filters
+              </Button>
+              <Button
+                onClick={() => setShowPostRequest(true)}
+                variant="premium"
+                size="lg"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Create New Request
+              </Button>
+            </div>
+          )}
         </motion.div>
       ) : (
         <div
