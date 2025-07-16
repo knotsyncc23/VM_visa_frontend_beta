@@ -1,0 +1,19 @@
+{
+  "buildCommand": "npm run build:client",
+  "outputDirectory": "dist/spa",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "dist/server/node-build.mjs": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  }
+}
