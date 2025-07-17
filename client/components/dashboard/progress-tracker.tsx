@@ -23,7 +23,7 @@ export function ProgressTracker({ cases }: ProgressTrackerProps) {
     <div className="space-y-8">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
@@ -53,7 +53,7 @@ export function ProgressTracker({ cases }: ProgressTrackerProps) {
         return (
           <motion.div
             key={caseItem._id}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.2, duration: 0.6 }}
             className="glass-card p-8 rounded-3xl"

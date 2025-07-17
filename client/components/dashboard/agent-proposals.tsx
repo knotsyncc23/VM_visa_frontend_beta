@@ -279,9 +279,9 @@ export function AgentProposals({ proposals: realProposals = [], onProposalAccept
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0 }}
         className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
       >
         <div>
@@ -317,9 +317,9 @@ export function AgentProposals({ proposals: realProposals = [], onProposalAccept
         {displayProposals.map((proposal, index) => (
           <motion.div
             key={proposal.id}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.6 }}
+            transition={{ delay: index * 0, duration: 0}}
             className="glass-card p-8 rounded-3xl hover:bg-white/40 transition-all duration-300"
           >
             {/* Proposal Header */}
@@ -508,7 +508,7 @@ export function AgentProposals({ proposals: realProposals = [], onProposalAccept
       {/* No Proposals State */}
       {displayProposals.length === 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12"
         >

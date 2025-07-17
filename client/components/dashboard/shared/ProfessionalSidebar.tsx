@@ -187,8 +187,7 @@ const getSidebarItems = (userType: string) => {
   // Default items for clients and organizations
   return [
     { id: "overview", label: "Dashboard", icon: BarChart3 },
-    { id: "chat", label: "Chat", icon: MessageCircle, badge: 3 },
-    { id: "messages", label: "Messages", icon: Mail, badge: 5 },
+    { id: "chat", label: "Message", icon: MessageCircle, },
     { id: "calendar", label: "Calendar", icon: Calendar },
     { id: "escrow", label: "Escrow & Payments", icon: Shield },
     { id: "support", label: "Support & Help", icon: HelpCircle },

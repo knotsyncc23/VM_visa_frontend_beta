@@ -172,7 +172,7 @@ export function DashboardOverview({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0 }}
         className="glass-card p-6 rounded-2xl"
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -219,7 +219,7 @@ export function DashboardOverview({
               key={index}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
+              transition={{ delay: index * 0, duration: 0 }}
               whileHover={{ scale: 1.01 }}
               onClick={stat.clickAction}
               className={`h-auto glass-card p-4 rounded-xl transition-all duration-300 border cursor-pointer ${
@@ -286,7 +286,7 @@ export function DashboardOverview({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl h-fit"
           >
             <div className="flex items-center justify-between mb-6">
@@ -358,7 +358,7 @@ export function DashboardOverview({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl"
           >
             <h2 className="text-xl font-heading font-bold text-cool-gray-800 mb-6">
@@ -419,7 +419,7 @@ export function DashboardOverview({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl"
           >
             <div className="flex items-center justify-between mb-6">

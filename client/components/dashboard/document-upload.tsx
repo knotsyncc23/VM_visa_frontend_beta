@@ -164,9 +164,9 @@ export function DocumentUpload() {
     <div className="space-y-8">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0 }}
       >
         <h1 className="text-3xl font-heading font-bold text-cool-gray-800 mb-2">
           Document Upload
@@ -180,9 +180,9 @@ export function DocumentUpload() {
         {/* Categories Sidebar */}
         <div className="lg:col-span-1">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: 0 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl"
           >
             <h2 className="text-lg font-heading font-bold text-cool-gray-800 mb-4">
@@ -222,9 +222,9 @@ export function DocumentUpload() {
         <div className="lg:col-span-3 space-y-6">
           {/* Upload Zone */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-8 rounded-3xl"
           >
             <div className="flex items-center justify-between mb-6">
@@ -292,9 +292,9 @@ export function DocumentUpload() {
 
           {/* Files List */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl"
           >
             <div className="flex items-center justify-between mb-6">
@@ -313,7 +313,7 @@ export function DocumentUpload() {
                   return (
                     <motion.div
                       key={file.id}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: 0 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center justify-between p-4 bg-white/20 rounded-2xl border border-white/20"
                     >
@@ -407,9 +407,9 @@ export function DocumentUpload() {
 
           {/* AI Document Suggestions */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0, duration: 0 }}
             className="glass-card p-6 rounded-3xl bg-gradient-to-br from-royal-blue-50 to-sky-blue-50 border border-royal-blue-200"
           >
             <div className="flex items-center space-x-3 mb-4">

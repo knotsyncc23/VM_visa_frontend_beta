@@ -28,6 +28,7 @@ import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
 import { VisaRequest } from "@shared/types";
 
+
 // Extended interface for frontend compatibility
 interface ExtendedVisaRequest extends VisaRequest {
   _id?: string;
@@ -560,9 +561,9 @@ export function MyRequests() {
             {proposals.map((proposal, index) => (
               <motion.div
                 key={proposal.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.0 }}
                 className="glass-card rounded-2xl p-6 border-2 border-transparent hover:border-royal-blue-200 transition-all duration-300"
               >
                 <div className="flex flex-col lg:flex-row gap-6">
@@ -706,7 +707,7 @@ export function MyRequests() {
 
       {/* Request Summary - Only show if user has requests */}
       {requests.length > 0 && (
-        <div className="glass-card p-6 rounded-2xl mb-6">
+        <div className="glass-card p-6 rounded-2xl mb-6 bg-white/80 backdrop-blur-sm border border-white/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div>
@@ -740,51 +741,49 @@ export function MyRequests() {
                 </div>
               </div>
             </div>
-            
-            {/* Quick add button for existing users */}
-            <Button
-              onClick={() => setShowPostRequest(true)}
-              variant="outline"
-              size="sm"
-              className="group"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add Request
-            </Button>
           </div>
         </div>
       )}
 
       {/* Filters and Controls */}
-      <div className="glass-card p-6 rounded-2xl mb-8">
+      <div className="glass-card p-6 rounded-2xl mb-8 bg-white/80 backdrop-blur-sm border border-slate-300">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-cool-gray-500" />
-            <input
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-black">
+              <Search className="w-5 h-5" />
+              </span>
+              <input
               type="text"
               placeholder="Search requests..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full bg-white/60 border border-white/30 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 text-sm backdrop-blur-sm"
-            />
-          </div>
+              className="pl-10 pr-4 py-2 w-full bg-white/80 border border-slate-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 text-sm backdrop-blur-sm"
+              />
+            </div>
 
           <div className="flex items-center gap-4">
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-cool-gray-500" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-white/60 border border-white/30 rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:ring-2 focus:ring-royal-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              <div className="flex gap-2">
+              {[
+                { value: "all", label: "All" },
+                { value: "pending", label: "Pending" },
+                { value: "in-progress", label: "In Progress" },
+                { value: "completed", label: "Completed" },
+                { value: "rejected", label: "Rejected" },
+              ].map(option => (
+                <Button
+                key={option.value}
+                variant={filterStatus === option.value ? "premium" : "outline"}
+                size="sm"
+                className={filterStatus === option.value ? "font-bold" : ""}
+                onClick={() => setFilterStatus(option.value)}
+                >
+                {option.label}
+                </Button>
+              ))}
+              </div>
             </div>
 
             {/* View Mode Toggle */}
@@ -820,7 +819,7 @@ export function MyRequests() {
       {sortedRequests.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, }}
-          animate={{ opacity: 1, }}
+          animate={{ opacity: 0, }}
           className="glass-card p-12 rounded-2xl text-center"
         >
           <FileText className="w-16 h-16 text-cool-gray-300 mx-auto mb-4" />
@@ -882,9 +881,9 @@ export function MyRequests() {
           {sortedRequests.map((request, index) => (
             <motion.div
               key={request.id || (request as any)._id || index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0 }}
               className={cn(
                 "glass-card rounded-2xl p-6 group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-royal-blue-200",
                 viewMode === "list" && "flex items-center gap-6",
@@ -927,7 +926,7 @@ export function MyRequests() {
                     <AnimatePresence>
                       {openDropdown === (request.id || (request as any)._id) && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          initial={{ opacity: 0, y: 0, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
