@@ -542,7 +542,7 @@ export function MultiStepForm({ type, onSubmit, onBack }: MultiStepFormProps) {
         case 3:
           return (
             <div className="space-y-6">
-              <div className="glass-card p-6 rounded-2xl">
+              <div className="glass-card p-6 rounded-2xl bg-white/80 shadow-lg">
                 <h3 className="text-xl font-heading font-bold mb-4">
                   Review Your Information
                 </h3>

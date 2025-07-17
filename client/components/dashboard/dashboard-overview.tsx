@@ -170,8 +170,8 @@ export function DashboardOverview({
     <div className="space-y-8">
       {/* Welcome Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
         className="glass-card p-6 rounded-2xl"
       >
@@ -217,10 +217,10 @@ export function DashboardOverview({
           return (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ y: -2, scale: 1.01 }}
+              whileHover={{ scale: 1.01 }}
               onClick={stat.clickAction}
               className={`h-auto glass-card p-4 rounded-xl transition-all duration-300 border cursor-pointer ${
                 isActiveRequests
@@ -284,8 +284,8 @@ export function DashboardOverview({
         {/* Active Applications */}
         <div className="lg:col-span-2">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
             className="glass-card p-6 rounded-3xl h-fit"
           >
@@ -356,8 +356,8 @@ export function DashboardOverview({
         <div className="space-y-6">
           {/* Quick Actions */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
             className="glass-card p-6 rounded-3xl"
           >
@@ -417,8 +417,8 @@ export function DashboardOverview({
 
           {/* Recent Activity */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
             className="glass-card p-6 rounded-3xl"
           >
