@@ -373,6 +373,11 @@ class ApiClient {
     return response.data || [];
   }
 
+  async getAgents(): Promise<any[]> {
+    const response = await this.request<{ success: boolean; data: any[] }>(`/users/agents`);
+    return response.data || [];
+  }
+
   // Token validation
   async validateToken(): Promise<boolean> {
     try {
@@ -645,6 +650,7 @@ export interface CaseMilestone {
   submittedFiles: string[];
   clientFeedback?: string;
   agentNotes?: string;
+  isPaid?: boolean;
 }
 
 export type MilestoneStatus = 'pending' | 'in-progress' | 'completed' | 'approved' | 'rejected';

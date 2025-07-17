@@ -39,7 +39,7 @@ import { FloatingAIAssistant } from "@/components/dashboard/floating-ai-assistan
 import { BrowseAgentsFiltered } from "@/components/dashboard/browse-agents-filtered";
 import { ProfessionalSidebar } from "@/components/dashboard/shared/ProfessionalSidebar";
 import { useAuth } from "@/components/auth/auth-context";
-import { api, DashboardStats, VisaRequest, Proposal } from "@shared/api";
+import { api, DashboardStats, VisaRequest, Proposal, Case } from "@shared/api";
 
 type DashboardView =
   | "overview"
@@ -66,6 +66,7 @@ export default function ClientDashboard() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [cases, setCases] = useState<Case[]>([]);
 
   // Handle URL parameters for navigation
   useEffect(() => {
@@ -101,11 +102,16 @@ export default function ClientDashboard() {
           setProposals(Array.isArray(proposalsData) ? proposalsData : []);
         }
         
+        // Fetch user's active cases
+        const userCases = await api.getCases({ clientId: user.id, status: 'active' });
+        setCases(Array.isArray(userCases) ? userCases : []);
+        
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         // Set empty arrays as fallback
         setVisaRequests([]);
         setProposals([]);
+        setCases([]);
       } finally {
         setIsLoading(false);
       }
@@ -305,7 +311,7 @@ export default function ClientDashboard() {
       case "active-cases":
         return <ActiveCases />;
       case "progress":
-        return <ProgressTracker />;
+        return <ProgressTracker cases={cases} />;
       case "documents":
         return <DocumentUpload />;
       case "browse-agents":

@@ -544,7 +544,7 @@ export default function CaseDetailPage() {
                       )}
 
                       {/* Payment Button */}
-                      {isClient && milestone.status === 'approved' && (
+                      {isClient && milestone.status === 'approved' && !milestone.isPaid && (
                         <div className="mt-3">
                           <Button
                             onClick={() => makePayment(index, 'credit_card')}

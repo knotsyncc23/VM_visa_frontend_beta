@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
   List,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@shared/api";
 
 interface Agent {
   id: string;
@@ -47,6 +48,25 @@ export function BrowseAgentsFiltered() {
   const [sortBy, setSortBy] = useState("rating");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        setLoading(true);
+        const data = await api.getAgents();
+        setAgents(data);
+        console.log('Fetched agents:', data);
+      } catch (err) {
+        setError('Failed to fetch agents');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgents();
+  }, []);
 
   const visaTypes = [
     "All Visa Types",
@@ -70,86 +90,7 @@ export function BrowseAgentsFiltered() {
     "Singapore",
   ];
 
-  const mockAgents: Agent[] = [
-    {
-      id: "agent_001",
-      name: "Sarah Johnson",
-      avatar: "SJ",
-      title: "Your trusted partner in immigration success",
-      rating: 4.9,
-      reviews: 157,
-      experience: "8+ years",
-      location: "Toronto, Canada",
-      specializations: ["Work Permit", "Permanent Residence", "Student Visa"],
-      successRate: 96,
-      responseTime: "< 2 hours",
-      priceRange: "$500 - $2,000",
-      languages: ["English", "French", "Spanish"],
-      isVerified: true,
-      isOnline: true,
-      completedCases: 245,
-    },
-    {
-      id: "agent_002",
-      name: "Michael Chen",
-      avatar: "MC",
-      title: "Expert Immigration Consultant",
-      rating: 4.8,
-      reviews: 203,
-      experience: "12+ years",
-      location: "Vancouver, Canada",
-      specializations: [
-        "Business Visa",
-        "Investment Visa",
-        "Family Sponsorship",
-      ],
-      successRate: 94,
-      responseTime: "< 4 hours",
-      priceRange: "$800 - $3,000",
-      languages: ["English", "Mandarin", "Cantonese"],
-      isVerified: true,
-      isOnline: false,
-      completedCases: 312,
-    },
-    {
-      id: "agent_003",
-      name: "Emily Rodriguez",
-      avatar: "ER",
-      title: "Specialized in Student Immigration",
-      rating: 4.7,
-      reviews: 89,
-      experience: "5+ years",
-      location: "Sydney, Australia",
-      specializations: ["Student Visa", "Work Permit", "Tourist Visa"],
-      successRate: 98,
-      responseTime: "< 6 hours",
-      priceRange: "$300 - $1,500",
-      languages: ["English", "Spanish", "Portuguese"],
-      isVerified: true,
-      isOnline: true,
-      completedCases: 176,
-    },
-    {
-      id: "agent_004",
-      name: "David Wilson",
-      avatar: "DW",
-      title: "US Immigration Attorney",
-      rating: 4.9,
-      reviews: 324,
-      experience: "15+ years",
-      location: "New York, USA",
-      specializations: ["Work Permit", "Business Visa", "Permanent Residence"],
-      successRate: 97,
-      responseTime: "< 3 hours",
-      priceRange: "$1,000 - $5,000",
-      languages: ["English"],
-      isVerified: true,
-      isOnline: true,
-      completedCases: 456,
-    },
-  ];
-
-  const filteredAgents = mockAgents.filter((agent) => {
+  const filteredAgents = agents.filter((agent) => {
     const matchesSearch =
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agent.specializations.some((spec) =>
@@ -174,8 +115,8 @@ export function BrowseAgentsFiltered() {
         return parseInt(b.experience) - parseInt(a.experience);
       case "price":
         return (
-          parseInt(a.priceRange.split(" - ")[0].replace("$", "")) -
-          parseInt(b.priceRange.split(" - ")[0].replace("$", ""))
+          parseInt((a.priceRange || "0").split(" - ")[0].replace("$", "")) -
+          parseInt((b.priceRange || "0").split(" - ")[0].replace("$", ""))
         );
       case "success":
         return b.successRate - a.successRate;
@@ -191,6 +132,13 @@ export function BrowseAgentsFiltered() {
         : [...prev, agentId],
     );
   };
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading agents...</div>;
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="max-w-7xl">
@@ -322,7 +270,7 @@ export function BrowseAgentsFiltered() {
         >
           {sortedAgents.map((agent, index) => (
             <motion.div
-              key={agent.id}
+              key={agent._id || agent.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
