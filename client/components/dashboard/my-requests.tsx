@@ -819,8 +819,8 @@ export function MyRequests() {
       {/* Requests Grid/List */}
       {sortedRequests.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, }}
+          animate={{ opacity: 1, }}
           className="glass-card p-12 rounded-2xl text-center"
         >
           <FileText className="w-16 h-16 text-cool-gray-300 mx-auto mb-4" />

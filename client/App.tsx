@@ -39,6 +39,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/forget-password";
+import ResetPassword from "./pages/reset-password";
 import ClientDashboard from "./pages/ClientDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
@@ -67,6 +69,8 @@ function AppContent() {
   const hideNavigation = [
     "/signup",
     "/login",
+    "/forgot-password",
+    "/reset-password",
     "/dashboard",
     "/agent-dashboard",
     "/org-dashboard",
@@ -83,7 +87,7 @@ function AppContent() {
     "/tools",
     "/escrow",
     "/admin/escrow",
-  ].includes(location.pathname) || location.pathname.startsWith('/case/');
+  ].includes(location.pathname) || location.pathname.startsWith('/case/') || location.pathname.startsWith('/reset-password/');
 
   return (
     <>
@@ -96,6 +100,8 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route
             path="/dashboard"
             element={

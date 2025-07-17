@@ -364,7 +364,7 @@ export default function ClientDashboard() {
 
       {/* Main Content */}
       <div
-        className="flex-1 transition-all duration-300"
+        className="flex-1 transition-all duration-0 ease-in-out"
         style={{ marginLeft: sidebarCollapsed ? "80px" : "320px" }}
       >
         {/* Header */}
@@ -422,7 +422,7 @@ export default function ClientDashboard() {
                     className="text-sm font-medium"
                     style={{ color: "#455A64" }}
                   >
-                    John Doe
+                    
                   </span>
                   <ChevronDown
                     className={cn(
@@ -440,7 +440,7 @@ export default function ClientDashboard() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
+                      transition={{ duration: 0 }}
                       className="absolute right-0 top-full mt-2 w-56 rounded-lg shadow-lg border border-gray-200 z-50"
                       style={{ backgroundColor: "#FEFEFE" }}
                     >
@@ -587,10 +587,10 @@ export default function ClientDashboard() {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0 }}
             >
               {renderContent()}
             </motion.div>
