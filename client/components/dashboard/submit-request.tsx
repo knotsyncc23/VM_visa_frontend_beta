@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +18,13 @@ import {
   DollarSign,
   Clock,
   Star,
+  ArrowRight,
+  User,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
-import styles from './post-visa-request.module.css';
 
 interface FormData {
   title: string;
@@ -35,11 +36,11 @@ interface FormData {
   priority: 'low' | 'medium' | 'high' | 'urgent';
 }
 
-interface PostVisaRequestProps {
+interface SubmitRequestProps {
   onSuccess?: () => void;
 }
 
-export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
+export function SubmitRequest({ onSuccess }: SubmitRequestProps) {
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -166,11 +167,11 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const aiDescriptions = {
-        "Work Permit": {
+        "work-permit": {
           Canada: `I am seeking professional assistance for a Canadian work permit application. I have a job offer from a Canadian employer and need guidance on the LMIA process, work permit documentation, and ensuring all requirements are met for a successful application. I would appreciate help with preparing my application package, reviewing my documentation, and providing expert advice throughout the process.`,
           "United States": `I require expert assistance for a U.S. work visa application (H-1B/L-1/O-1). I have relevant work experience and need help navigating the complex application process, preparing required documentation, and ensuring compliance with all USCIS requirements. Professional guidance on petition preparation and supporting evidence would be invaluable.`,
         },
-        "Student Visa": {
+        "student-visa": {
           Canada: `I am planning to pursue higher education in Canada and need professional assistance with my student visa application. I require help with document preparation, statement of purpose writing, financial documentation, and ensuring all CIC requirements are met. Expert guidance on the application process and interview preparation would be greatly appreciated.`,
           "United Kingdom": `I am seeking admission to a UK university and require expert assistance with my student visa application. I need help with Tier 4 visa requirements, financial evidence preparation, academic documentation, and CAS-related processes. Professional guidance throughout the application journey would be extremely valuable.`,
         },
@@ -178,7 +179,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
 
       const description =
         aiDescriptions[formData.visaType]?.[formData.country] ||
-        `I am seeking professional immigration assistance for my ${formData.visaType.toLowerCase()} application to ${formData.country}. I need expert guidance on documentation requirements, application procedures, and ensuring the best possible outcome for my case. Professional consultation and application support would be greatly appreciated.`;
+        `I am seeking professional immigration assistance for my ${formData.visaType.replace('-', ' ')} application to ${formData.country}. I need expert guidance on documentation requirements, application procedures, and ensuring the best possible outcome for my case. Professional consultation and application support would be greatly appreciated.`;
 
       setFormData((prev) => ({ ...prev, description }));
       setShowAIOptions(true);
@@ -225,7 +226,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
 
     if (!validateForm()) return;
     if (!user) {
-      alert("You must be logged in to post a visa request.");
+      alert("You must be logged in to submit a visa request.");
       return;
     }
 
@@ -249,7 +250,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
       localStorage.removeItem("vm-visa-request-draft");
 
       alert(
-        "Your visa request has been posted successfully! Agents will start sending proposals within 24 hours.",
+        "Your visa request has been submitted successfully! Agents will start sending proposals within 24 hours.",
       );
 
       // Reset form
@@ -269,7 +270,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
       }
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Failed to post request. Please try again.");
+      alert("Failed to submit request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -285,23 +286,17 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-8 text-center"
-      >
+      <div className="mb-8 text-center">
         <h1 className="text-3xl font-heading font-bold text-cool-gray-800 mb-2">
-          Post New Visa Request
+          Submit Visa Request
         </h1>
         <p className="text-lg text-cool-gray-600">
-          Tell us about your immigration needs and get proposals from certified
-          agents.
+          Tell us about your immigration needs and get proposals from certified agents.
         </p>
 
         {/* Auto-save indicator */}
         {autoSaveStatus && (
-          <div className="flex items-center space-x-2 mt-4">
+          <div className="flex items-center justify-center space-x-2 mt-4">
             {autoSaveStatus === "saving" ? (
               <RefreshCw className="w-4 h-4 text-cool-gray-500 animate-spin" />
             ) : autoSaveStatus === "saved" ? (
@@ -318,15 +313,10 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
             </span>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Form */}
-      <motion.div
-        initial={{ opacity: 0, y: 0 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0, duration: 0 }}
-        className="glass-card p-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-slate-300 shadow-lg mx-auto max-w-3xl"
-      >
+      <div className="glass-card p-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-slate-300 shadow-lg mx-auto max-w-3xl">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <div className="grid md:grid-cols-2 gap-6">
@@ -345,15 +335,14 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
             </div>
 
             <div>
+              <Label htmlFor="priority">Priority Level</Label>
               <select
                 id="priority"
-                title="Select priority level"
+                title="Priority Level"
                 value={formData.priority}
                 onChange={(e) => updateFormData("priority", e.target.value)}
-                className="custom-select w-full p-3 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none text-cool-gray-700 font-medium hover:shadow-md focus:shadow-lg bg-gradient-to-r from-white to-gray-50"
+                className="w-full p-3 pr-10 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none text-cool-gray-700 font-medium hover:shadow-md focus:shadow-lg bg-gradient-to-r from-white to-gray-50"
               >
-                
-              
                 <option value="low">Low Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="high">High Priority</option>
@@ -368,22 +357,16 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               <Label htmlFor="visaType">Visa Type *</Label>
               <select
                 id="visaType"
+                title="Visa Type"
                 value={formData.visaType}
                 onChange={(e) => updateFormData("visaType", e.target.value)}
                 className={cn(
-                  "w-full p-3 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
+                  "w-full p-3 pr-10 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
                   "text-cool-gray-700 font-medium",
                   "hover:shadow-md focus:shadow-lg",
                   "bg-gradient-to-r from-white to-gray-50",
                   errors.visaType && "border-red-500",
                 )}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
               >
                 <option value="">Select visa type</option>
                 {visaTypes.map((type) => (
@@ -401,22 +384,16 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               <Label htmlFor="country">Destination Country *</Label>
               <select
                 id="country"
+                title="Destination Country"
                 value={formData.country}
                 onChange={(e) => updateFormData("country", e.target.value)}
                 className={cn(
-                  "w-full p-3 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
+                  "w-full p-3 pr-10 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
                   "text-cool-gray-700 font-medium",
                   "hover:shadow-md focus:shadow-lg",
                   "bg-gradient-to-r from-white to-gray-50",
                   errors.country && "border-red-500",
                 )}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
               >
                 <option value="">Select country</option>
                 {countries.map((country) => (
@@ -476,11 +453,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
 
             {/* AI Options */}
             {showAIOptions && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-royal-blue-50 rounded-xl border border-royal-blue-200"
-              >
+              <div className="mt-4 p-4 bg-royal-blue-50 rounded-xl border border-royal-blue-200">
                 <div className="flex items-center space-x-2 mb-3">
                   <Bot className="w-5 h-5 text-royal-blue-600" />
                   <span className="text-sm font-medium text-royal-blue-700">
@@ -516,7 +489,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
                     Edit Manually
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
 
@@ -526,22 +499,16 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               <Label htmlFor="budget">Budget Range *</Label>
               <select
                 id="budget"
+                title="Budget Range"
                 value={formData.budget}
                 onChange={(e) => updateFormData("budget", e.target.value)}
                 className={cn(
-                  "w-full p-3 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
+                  "w-full p-3 pr-10 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
                   "text-cool-gray-700 font-medium",
                   "hover:shadow-md focus:shadow-lg",
                   "bg-gradient-to-r from-white to-gray-50",
                   errors.budget && "border-red-500",
                 )}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
               >
                 <option value="">Select budget range</option>
                 {budgetRanges.map((range) => (
@@ -559,22 +526,16 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               <Label htmlFor="timeline">Timeline *</Label>
               <select
                 id="timeline"
+                title="Timeline"
                 value={formData.timeline}
                 onChange={(e) => updateFormData("timeline", e.target.value)}
                 className={cn(
-                  "w-full p-3 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
+                  "w-full p-3 pr-10 border border-cool-gray-300 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 transition-all duration-200 hover:border-royal-blue-400 cursor-pointer bg-white shadow-sm appearance-none",
                   "text-cool-gray-700 font-medium",
                   "hover:shadow-md focus:shadow-lg",
                   "bg-gradient-to-r from-white to-gray-50",
                   errors.timeline && "border-red-500",
                 )}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
               >
                 <option value="">Select timeline</option>
                 {timelineOptions.map((option) => (
@@ -596,10 +557,20 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
               variant="premium"
               size="lg"
               className="flex-1 group"
+              disabled={isSubmitting}
             >
-              <Send className="w-5 h-5 mr-2" />
-              Post Request
-              <Star className="w-4 h-4 ml-2 group-hover:text-gold-300 transition-colors" />
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5 mr-2" />
+                  Submit Request
+                  <Star className="w-4 h-4 ml-2 group-hover:text-gold-300 transition-colors" />
+                </>
+              )}
             </Button>
 
             <Button type="button" variant="outline" size="lg">
@@ -624,7 +595,7 @@ export function PostVisaRequest({ onSuccess }: PostVisaRequestProps) {
             </div>
           </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 }

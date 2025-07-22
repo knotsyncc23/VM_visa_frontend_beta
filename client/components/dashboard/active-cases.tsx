@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/auth-context';
 import { api, Case } from '../../../shared/api';
 import {
@@ -21,12 +20,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { SubmitRequest } from './submit-request';
 
 export function ActiveCases() {
   const { user } = useAuth();
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [showSubmitRequest, setShowSubmitRequest] = useState(false);
 
   useEffect(() => {
     fetchCases();
@@ -111,6 +112,16 @@ export function ActiveCases() {
     window.location.href = `/calendar?case=${caseItem._id}&action=schedule`;
   };
 
+  const handleSubmitRequestSuccess = () => {
+    setShowSubmitRequest(false);
+    fetchCases(); // Refresh cases after successful submission
+  };
+
+  // Show submit request form if user clicked the button
+  if (showSubmitRequest && user?.userType === 'client') {
+    return <SubmitRequest onSuccess={handleSubmitRequestSuccess} />;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -134,12 +145,18 @@ export function ActiveCases() {
               : "You don't have any active cases at the moment. Apply to more visa requests to get started."
             }
           </p>
-          <Button 
+            <Button 
             variant="premium"
-            onClick={() => window.location.href = user?.userType === 'client' ? '/submit-request' : '/browse-requests'}
-          >
-            {user?.userType === 'client' ? 'Submit Request' : 'Browse Requests'}
-          </Button>
+            onClick={() => {
+              if (user?.userType === 'client') {
+                setShowSubmitRequest(true);
+              } else {
+                window.location.href = '/browse-requests';
+              }
+            }}
+            >
+            {user?.userType === 'client' ? 'Submit New Request' : 'Browse Available Requests'}
+            </Button>
         </CardContent>
       </Card>
     );
@@ -165,16 +182,10 @@ export function ActiveCases() {
           const isOverdue = overdueMilestones.length > 0;
           
           return (
-            <motion.div
-              key={caseItem._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -2 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div key={caseItem._id}>
               <Card className={cn(
-                "hover:shadow-lg transition-all duration-300 border-l-4",
-                isOverdue ? "border-l-red-500" : "border-l-royal-blue-500"
+                "border-l-4",
+                isOverdue ? "border-l-red-500" : "border-l-green-100 shadow-lg"
               )}>
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -342,7 +353,7 @@ export function ActiveCases() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           );
         })}
       </div>

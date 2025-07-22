@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useProfile } from "@/hooks/useProfile";
+import { useToast } from "@/hooks/use-toast";
 import {
   User,
   Mail,
@@ -19,44 +21,168 @@ import {
   GraduationCap,
   Clock,
   Shield,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function UserProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
+  const { profile, isLoading, updateProfile } = useProfile();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const userInfo = {
-    name: "John Doe",
-    email: "john.doe@email.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, United States",
-    joinDate: "January 2024",
-    membershipType: "Premium",
-    isVerified: true,
-    profileCompletion: 85,
-    totalRequests: 8,
-    successfulApplications: 6,
-    averageRating: 4.8,
-    languages: ["English", "Spanish"],
-    occupation: "Software Engineer",
-    education: "Master's in Computer Science",
-    experience: "5+ years",
-    visaHistory: [
-      {
-        country: "Canada",
-        type: "Work Permit",
-        status: "Approved",
-        date: "2023",
-      },
-      {
-        country: "United Kingdom",
-        type: "Student Visa",
-        status: "Approved",
-        date: "2021",
-      },
-    ],
+  // Form data for editing
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    currentCountry: "",
+    nationality: "",
+    bio: "",
+    currentAddress: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
+  });
+
+  // Update form data when profile loads
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        currentCountry: profile.currentCountry || "",
+        nationality: profile.nationality || "",
+        bio: profile.bio || "",
+        currentAddress: {
+          street: profile.currentAddress?.street || "",
+          city: profile.currentAddress?.city || "",
+          state: profile.currentAddress?.state || "",
+          zipCode: profile.currentAddress?.zipCode || "",
+          country: profile.currentAddress?.country || "",
+        },
+      });
+    }
+  }, [profile]);
+
+  const handleInputChange = (field: string, value: string) => {
+    if (field.includes('currentAddress.')) {
+      const addressField = field.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        currentAddress: {
+          ...prev.currentAddress,
+          [addressField]: value,
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      await updateProfile(formData);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to save profile:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Default values when profile is loading or not available
+  const userInfo = profile ? {
+    name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || "User",
+    email: profile.email || "user@email.com",
+    phone: profile.phone || "Not provided",
+    location: profile.currentAddress ? 
+      `${profile.currentAddress.city || ''}, ${profile.currentAddress.country || ''}`.replace(/^,\s*|,\s*$/g, '') || "Not provided"
+      : "Not provided",
+    joinDate: "Recently", // We'll need to add createdAt to the profile type later
+    membershipType: "Standard",
+    isVerified: false, // We'll need to add this to the profile type later
+    profileCompletion: calculateProfileCompletion(profile),
+    totalRequests: 0, // This would come from cases data
+    successfulApplications: 0, // This would come from cases data
+    averageRating: 0, // This would come from reviews data
+    languages: [], // We'll need to add this to the profile type later
+    occupation: "Not specified", // We'll need to add this to the profile type later
+    education: "Not specified", // We'll need to add this to the profile type later
+    experience: "Not specified",
+    nationality: profile.nationality || "Not specified",
+    bio: profile.bio || "No bio provided",
+  } : {
+    name: "Loading...",
+    email: "loading...",
+    phone: "loading...",
+    location: "loading...",
+    joinDate: "loading...",
+    membershipType: "Standard",
+    isVerified: false,
+    profileCompletion: 0,
+    totalRequests: 0,
+    successfulApplications: 0,
+    averageRating: 0,
+    languages: [],
+    occupation: "loading...",
+    education: "loading...",
+    experience: "loading...",
+    nationality: "loading...",
+    bio: "loading...",
+  };
+
+  // Helper function to calculate profile completion
+  function calculateProfileCompletion(profile: any) {
+    const fields = [
+      profile.firstName,
+      profile.lastName,
+      profile.email,
+      profile.phone,
+      profile.nationality,
+      profile.currentCountry,
+      profile.currentAddress?.street,
+      profile.currentAddress?.city,
+      profile.currentAddress?.country,
+      profile.bio,
+    ];
+    
+    const filledFields = fields.filter(field => field && field.toString().trim().length > 0);
+    return (filledFields.length / fields.length) * 100;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-royal-blue-500 mx-auto mb-4" />
+            <p className="text-cool-gray-600">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: "personal", label: "Personal Info", icon: User },
@@ -123,13 +249,13 @@ export function UserProfile() {
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-cool-gray-600">Profile Completion</span>
                 <span className="font-semibold">
-                  {userInfo.profileCompletion}%
+                  {Math.round(userInfo.profileCompletion)}%
                 </span>
               </div>
               <div className="w-full bg-cool-gray-200 rounded-full h-2">
                 <div
                   className="bg-gradient-to-r from-royal-blue-500 to-sage-green-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${userInfo.profileCompletion}%` }}
+                  style={{ width: `${Math.round(userInfo.profileCompletion)}%` }}
                 />
               </div>
             </div>
@@ -235,11 +361,24 @@ export function UserProfile() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-cool-gray-700 mb-2">
-                      Full Name
+                      First Name
                     </label>
                     <input
                       type="text"
-                      value={userInfo.name}
+                      value={isEditing ? formData.firstName : userInfo.name.split(' ')[0] || ''}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      disabled={!isEditing}
+                      className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-cool-gray-700 mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={isEditing ? formData.lastName : userInfo.name.split(' ').slice(1).join(' ') || ''}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
                       disabled={!isEditing}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
@@ -250,7 +389,8 @@ export function UserProfile() {
                     </label>
                     <input
                       type="email"
-                      value={userInfo.email}
+                      value={isEditing ? formData.email : userInfo.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                       disabled={!isEditing}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
@@ -261,7 +401,8 @@ export function UserProfile() {
                     </label>
                     <input
                       type="tel"
-                      value={userInfo.phone}
+                      value={isEditing ? formData.phone : userInfo.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
                       disabled={!isEditing}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
@@ -271,34 +412,37 @@ export function UserProfile() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-cool-gray-700 mb-2">
-                      Location
+                      Current Country
                     </label>
                     <input
                       type="text"
-                      value={userInfo.location}
+                      value={isEditing ? formData.currentCountry : userInfo.location}
+                      onChange={(e) => handleInputChange('currentCountry', e.target.value)}
                       disabled={!isEditing}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-cool-gray-700 mb-2">
-                      Occupation
+                      Nationality
                     </label>
                     <input
                       type="text"
-                      value={userInfo.occupation}
+                      value={isEditing ? formData.nationality : userInfo.nationality}
+                      onChange={(e) => handleInputChange('nationality', e.target.value)}
                       disabled={!isEditing}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-cool-gray-700 mb-2">
-                      Education
+                      Bio
                     </label>
-                    <input
-                      type="text"
-                      value={userInfo.education}
+                    <textarea
+                      value={isEditing ? formData.bio : userInfo.bio}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
                       disabled={!isEditing}
+                      rows={3}
                       className="w-full p-3 border border-cool-gray-300 rounded-xl bg-white/50 disabled:bg-cool-gray-50 disabled:text-cool-gray-600"
                     />
                   </div>
@@ -307,8 +451,19 @@ export function UserProfile() {
 
               {isEditing && (
                 <div className="flex gap-4 pt-4 border-t border-white/20">
-                  <Button className="bg-royal-blue-500 hover:bg-royal-blue-600 text-white">
-                    Save Changes
+                  <Button 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="bg-royal-blue-500 hover:bg-royal-blue-600 text-white"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </Button>
                   <Button variant="outline" onClick={() => setIsEditing(false)}>
                     Cancel
@@ -329,32 +484,18 @@ export function UserProfile() {
               </h3>
 
               <div className="space-y-4">
-                {userInfo.visaHistory.map((visa, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-white/30 rounded-2xl border border-white/20"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-cool-gray-800">
-                          {visa.country} - {visa.type}
-                        </h4>
-                        <p className="text-sm text-cool-gray-600">
-                          {visa.date}
-                        </p>
-                      </div>
-                      <Badge
-                        className={
-                          visa.status === "Approved"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                      >
-                        {visa.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                <div className="p-6 bg-white/30 rounded-2xl border border-white/20 text-center">
+                  <Globe className="w-12 h-12 text-cool-gray-400 mx-auto mb-4" />
+                  <h4 className="font-semibold text-cool-gray-800 mb-2">
+                    No Visa History Yet
+                  </h4>
+                  <p className="text-sm text-cool-gray-600 mb-4">
+                    Your visa application history will appear here once you start applying through our platform.
+                  </p>
+                  <Button variant="outline" className="text-royal-blue-600 border-royal-blue-300">
+                    Start New Application
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}

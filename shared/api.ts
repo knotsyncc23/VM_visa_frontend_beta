@@ -138,6 +138,28 @@ class ApiClient {
     return response.data?.data || [];
   }
 
+  // Client Profile endpoints
+  async getClientProfile(): Promise<any> {
+    const response = await this.request<{success: boolean, data: any}>('/clients/profile');
+    return response.data;
+  }
+
+  async updateClientProfile(data: any): Promise<any> {
+    const response = await this.request<{success: boolean, data: any}>('/clients/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  }
+
+  async createClientProfile(data: any): Promise<any> {
+    const response = await this.request<{success: boolean, data: any}>('/clients/profile', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  }
+
   // Dashboard endpoints
   async getDashboardStats(): Promise<any> {
     const response = await this.request<{success: boolean, data: any}>('/dashboard/stats');

@@ -279,7 +279,7 @@ export function AgentProfilePage({ agentId, proposalId, onBack, onMessage }: Age
             </div>
 
             {/* Contact Information */}
-            <div className="glass-card rounded-2xl p-6">
+            <div className="glass-card rounded-2xl p-6 border">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">

@@ -28,6 +28,7 @@ import { api } from "@shared/api";
 import { useAuth } from "@/components/auth/auth-context";
 import { VisaRequest } from "@shared/types";
 
+
 // Extended interface for frontend compatibility
 interface ExtendedVisaRequest extends VisaRequest {
   _id?: string;
@@ -526,153 +527,276 @@ export function MyRequests() {
     );
 
     return (
-      <div className="max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="outline"
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <button
             onClick={() => setShowProposals(false)}
-            className="group"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
           >
             ← Back to My Requests
-          </Button>
+          </button>
+          <span className="text-sm text-gray-500">
+            {loadingProposals ? 'Loading...' : `${proposals.length} agent${proposals.length !== 1 ? 's' : ''} submitted proposal${proposals.length !== 1 ? 's' : ''}`}
+          </span>
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-heading font-bold text-cool-gray-800 mb-2">
-            Proposals for: {currentRequest?.title}
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Proposals for: <span className="text-blue-600">{currentRequest?.title}</span>
           </h1>
-          <p className="text-lg text-cool-gray-600">
-            {loadingProposals ? 'Loading...' : `${proposals.length} agents have submitted proposals for this request`}
+          <p className="text-gray-600">
+            Review and manage proposals from qualified immigration agents.
           </p>
         </div>
 
         {loadingProposals ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-700"></div>
           </div>
         ) : proposals.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-500 mb-4">No proposals received yet</div>
-            <p className="text-sm text-gray-400">Agents will submit proposals soon. Check back later!</p>
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No proposals yet</h3>
+            <p className="text-gray-500">Agents will submit proposals soon. Please check back later.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {proposals.map((proposal, index) => (
-              <motion.div
+              <div
                 key={proposal.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="glass-card rounded-2xl p-6 border-2 border-transparent hover:border-royal-blue-200 transition-all duration-300"
+                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden transform hover:-translate-y-2 hover:scale-105 cursor-pointer animate-in fade-in slide-in-from-bottom-4"
+                style={{
+                  background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                  animationDelay: `${index * 150}ms`,
+                  animationDuration: '600ms'
+                }}
               >
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Agent Info */}
-                  <div 
-                    className="flex items-start gap-4 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
-                    onClick={() => handleViewAgentProfile(proposal.agentId, proposal.id)}
-                  >
-                    <div className="w-16 h-16 bg-gradient-to-br from-royal-blue-500 to-royal-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {proposal.agent?.name ? 
-                        proposal.agent.name.split(" ").map((n: string) => n[0]).join("") : 
-                        'A'
-                      }
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-cool-gray-800 hover:text-royal-blue-600 transition-colors">
-                        {proposal.agent?.name || 'Agent Name'}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-cool-gray-600 mb-2">
-                        <span>⭐ {proposal.agent?.rating || 'N/A'} Rating</span>
-                        <span>📍 {proposal.agent?.location || 'Location'}</span>
-                        <span>💼 {proposal.agent?.experience || 'N/A'} Experience</span>
-                      </div>
-                      <p className="text-cool-gray-700">{proposal.coverLetter || proposal.description || 'No description provided'}</p>
-                      <p className="text-xs text-blue-600 mt-1">Click to view full profile</p>
-                    </div>
-                  </div>
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -translate-y-6 translate-x-6 group-hover:scale-125 transition-transform duration-500"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-green-500/10 to-blue-500/10 rounded-full translate-y-4 -translate-x-4 group-hover:scale-125 transition-transform duration-500"></div>
 
-                  {/* Proposal Details */}
-                  <div className="lg:w-80 bg-royal-blue-50 rounded-xl p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-cool-gray-600">Price:</span>
-                        <span className="font-bold text-royal-blue-700 text-xl">
-                          ${proposal.proposedFee || proposal.price || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-cool-gray-600">Timeline:</span>
-                        <span className="font-semibold">{proposal.estimatedTimeline || proposal.timeline || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-cool-gray-600">Status:</span>
-                        <Badge className={`${
-                          proposal.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                          proposal.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {proposal.status || 'pending'}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-cool-gray-600">Submitted:</span>
-                        <span className="text-sm">
-                          {proposal.createdAt ? new Date(proposal.createdAt).toLocaleDateString() : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 mt-4">
-                      {proposal.status === 'pending' && (
-                        <>
-                          <Button 
-                            className="flex-1 bg-sage-green-500 hover:bg-sage-green-600"
-                            onClick={() => handleAcceptProposal(proposal.id)}
-                            disabled={loadingProposals}
-                          >
-                            {loadingProposals ? 'Accepting...' : 'Accept'}
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleMessageAgent(proposal.agentId, proposal.id)}
-                          >
-                            Message
-                          </Button>
-                        </>
-                      )}
-                      {proposal.status === 'rejected' && (
-                        <Button variant="outline" className="w-full" disabled>
-                          Rejected
-                        </Button>
-                      )}
-                    </div>
-
-                    {proposal.status === 'accepted' && (
-                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <h4 className="font-semibold text-green-800 mb-2">🎉 Proposal Accepted - Next Steps</h4>
-                        <div className="space-y-2 text-sm text-green-700">
-                          <p>• Review and sign the service agreement</p>
-                          <p>• Set up payment milestones in escrow</p>
-                          <p>• Schedule initial consultation call</p>
-                          <p>• Prepare required documents</p>
+                {/* Agent Profile Section */}
+                <div className="p-8 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    {/* Agent Avatar and Info */}
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-3">
+                          {proposal.agent?.name ? 
+                            proposal.agent.name.split(" ").map((n: string) => n[0]).join("") : 
+                            'AA'
+                          }
                         </div>
-                        <div className="flex gap-2 mt-3">
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            View Agreement
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-green-600 text-green-600">
-                            Set Up Escrow
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-green-600 text-green-600">
-                            Schedule Call
-                          </Button>
-                        </div>
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
                       </div>
-                    )}
+
+                      {/* Agent Info */}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">
+                          {proposal.agent?.name || 'Admin Agent'}
+                        </h3>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                          <div className="flex items-center gap-1">
+                            <span className="text-yellow-400">⭐</span>
+                            <span>{proposal.agent?.rating || 'N/A'} Rating</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span>�</span>
+                            <span>{proposal.agent?.location || 'N/A'} Location</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span>💼</span>
+                            <span>{proposal.agent?.experience || 'N/A'} Exp</span>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {proposal.coverLetter || proposal.description || 'No description provided'}
+                        </p>
+                        
+                        <button 
+                          className="text-blue-600 hover:text-blue-700 text-sm font-semibold inline-flex items-center gap-1 hover:gap-2 transition-all"
+                          onClick={() => handleViewAgentProfile(proposal.agentId, proposal.id)}
+                        >
+                          Click to view full profile
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                                            {/* Status Badge */}
+                    <div className="w-full"></div>
+                    <div className={`mt-1 px-4 py-2 rounded-full text-sm font-semibold shadow-sm ${
+                      proposal.status === 'accepted' 
+                      ? 'bg-green-100 text-green-800' 
+                      : proposal.status === 'rejected' 
+                      ? 'bg-red-100 text-red-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {proposal.status || 'Pending'}
+                    </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+
+                {/* Proposal Details */}
+                <div className="relative p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-xl"></div>
+                  <div className="relative">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="text-center">
+                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                          <div className="text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide">Price</div>
+                          <div className="text-2xl font-bold text-gray-900">
+                            ${proposal.proposedFee || proposal.price || '800'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">Professional Rate</div>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                          <div className="text-sm font-medium text-green-600 mb-2 uppercase tracking-wide">Timeline</div>
+                          <div className="text-xl font-bold text-gray-900">
+                            {proposal.estimatedTimeline || proposal.timeline || '1-month'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">Estimated Duration</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6 mt-6">
+                      <div className="text-center">
+                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                          <div className="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wide">Status</div>
+                          <div className={`text-lg font-semibold capitalize flex items-center justify-center gap-2 ${
+                            proposal.status === 'accepted' 
+                              ? 'text-green-600' 
+                              : proposal.status === 'rejected' 
+                              ? 'text-red-600' 
+                              : 'text-yellow-600'
+                          }`}>
+                            {proposal.status === 'accepted' && <span className="text-lg">✅</span>}
+                            {proposal.status === 'rejected' && <span className="text-lg">❌</span>}
+                            {proposal.status === 'pending' && <span className="text-lg">⏳</span>}
+                            {proposal.status || 'Pending'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">Current State</div>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                          <div className="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wide">Submitted</div>
+                          <div className="text-lg font-semibold text-gray-900">
+                            {proposal.createdAt ? new Date(proposal.createdAt).toLocaleDateString() : '7/17/2025'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">Application Date</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="bg-gray-50 px-8 py-6 rounded-b-xl">
+                  {proposal.status === 'pending' && (
+                    <div className="space-y-4">
+                      <div className="flex gap-4">
+                        <button 
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          onClick={() => handleAcceptProposal(proposal.id)}
+                          disabled={loadingProposals}
+                        >
+                          <span className="text-sm">✅</span>
+                          <span>{loadingProposals ? 'Processing...' : 'Accept Proposal'}</span>
+                        </button>
+                        
+                        <button 
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                          onClick={() => handleMessageAgent(proposal.agentId, proposal.id)}
+                        >
+                          <span className="text-sm">💬</span>
+                          <span>Message Agent</span>
+                        </button>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                          💡 <strong>Tip:</strong> Message the agent to discuss details before accepting
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {proposal.status === 'rejected' && (
+                    <div className="text-center">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                        <div className="text-2xl mb-2">❌</div>
+                        <div className="text-lg font-semibold text-red-800 mb-2">Proposal Rejected</div>
+                        <p className="text-sm text-red-600">This proposal was not selected for your request</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {proposal.status === 'accepted' && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      <div className="text-center mb-6">
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl mx-auto mb-3">
+                          🎉
+                        </div>
+                        <h4 className="text-xl font-semibold text-green-800 mb-2">Congratulations!</h4>
+                        <p className="text-green-700">Your proposal has been accepted. Here's what happens next:</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-white rounded-lg p-4 border border-green-200 hover:border-green-300 transition-colors">
+                          <div className="text-center">
+                            <div className="text-xl mb-2">📋</div>
+                            <span className="font-medium text-green-800">Review Agreement</span>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-green-200 hover:border-green-300 transition-colors">
+                          <div className="text-center">
+                            <div className="text-xl mb-2">🔒</div>
+                            <span className="font-medium text-green-800">Setup Escrow</span>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-green-200 hover:border-green-300 transition-colors">
+                          <div className="text-center">
+                            <div className="text-xl mb-2">📞</div>
+                            <span className="font-medium text-green-800">Schedule Call</span>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 border border-green-200 hover:border-green-300 transition-colors">
+                          <div className="text-center">
+                            <div className="text-xl mb-2">📁</div>
+                            <span className="font-medium text-green-800">Prepare Docs</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                          <span>📋</span>
+                          <span>View Agreement</span>
+                        </button>
+                        <button className="bg-white hover:bg-green-50 text-green-700 font-medium py-3 px-6 rounded-lg border border-green-200 hover:border-green-300 transition-colors shadow-sm flex items-center gap-2">
+                          <span>🔒</span>
+                          <span>Setup Escrow</span>
+                        </button>
+                        <button className="bg-white hover:bg-green-50 text-green-700 font-medium py-3 px-6 rounded-lg border border-green-200 hover:border-green-300 transition-colors shadow-sm flex items-center gap-2">
+                          <span>📞</span>
+                          <span>Schedule Call</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -681,121 +805,118 @@ export function MyRequests() {
   }
 
   return (
-    <div className="max-w-7xl">
+    <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-cool-gray-800 mb-2">
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
             My Visa Requests
           </h1>
-          <p className="text-lg text-cool-gray-600">
+          <p className="text-gray-600">
             Manage your visa applications and track their progress
           </p>
         </div>
 
         <Button
           onClick={() => setShowPostRequest(true)}
-          variant="premium"
-          size="lg"
-          className="group"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow-sm transition-colors"
         >
           <Plus className="w-5 h-5 mr-2" />
-          Post New Request
+          Create New Request
         </Button>
       </div>
 
       {/* Request Summary - Only show if user has requests */}
       {requests.length > 0 && (
-        <div className="glass-card p-6 rounded-2xl mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <div>
-                <h3 className="text-lg font-semibold text-cool-gray-800">
+                <h3 className="text-lg font-semibold text-gray-900">
                   {requests.length} Total Request{requests.length !== 1 ? 's' : ''}
                 </h3>
-                <p className="text-sm text-cool-gray-600">
+                <p className="text-sm text-gray-600">
                   {sortedRequests.length} matching current filters
                 </p>
               </div>
               
               {/* Quick stats */}
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-cool-gray-600">
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-gray-600">
                     {requests.filter(r => r.status === 'pending').length} Pending
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span className="text-cool-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-gray-600">
                     {requests.filter(r => r.status === 'in-progress').length} In Progress
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-cool-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">
                     {requests.filter(r => r.status === 'completed').length} Completed
                   </span>
                 </div>
               </div>
             </div>
-            
-            {/* Quick add button for existing users */}
-            <Button
-              onClick={() => setShowPostRequest(true)}
-              variant="outline"
-              size="sm"
-              className="group"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add Request
-            </Button>
           </div>
         </div>
       )}
 
       {/* Filters and Controls */}
-      <div className="glass-card p-6 rounded-2xl mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-cool-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search requests..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full bg-white/60 border border-white/30 rounded-xl focus:ring-2 focus:ring-royal-blue-500 focus:border-royal-blue-500 text-sm backdrop-blur-sm"
+              className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             />
           </div>
 
           <div className="flex items-center gap-4">
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-cool-gray-500" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-white/60 border border-white/30 rounded-lg px-3 py-2 text-sm backdrop-blur-sm focus:ring-2 focus:ring-royal-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              <div className="flex bg-gray-50 rounded-lg p-1">
+                {[
+                  { value: "all", label: "All" },
+                  { value: "pending", label: "Pending" },
+                  { value: "in-progress", label: "In Progress" },
+                  { value: "completed", label: "Completed" },
+                  { value: "rejected", label: "Rejected" },
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setFilterStatus(option.value)}
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                      filterStatus === option.value
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-white/60 rounded-lg p-1 backdrop-blur-sm">
+            <div className="flex items-center bg-gray-50 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
                 className={cn(
-                  "p-2 rounded-md transition-all",
+                  "p-2 rounded-md transition-colors",
                   viewMode === "grid"
-                    ? "bg-royal-blue-500 text-white"
-                    : "text-cool-gray-600 hover:text-royal-blue-600",
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:text-gray-900",
                 )}
               >
                 <Grid className="w-4 h-4" />
@@ -803,10 +924,10 @@ export function MyRequests() {
               <button
                 onClick={() => setViewMode("list")}
                 className={cn(
-                  "p-2 rounded-md transition-all",
+                  "p-2 rounded-md transition-colors",
                   viewMode === "list"
-                    ? "bg-royal-blue-500 text-white"
-                    : "text-cool-gray-600 hover:text-royal-blue-600",
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:text-gray-900",
                 )}
               >
                 <List className="w-4 h-4" />
@@ -819,18 +940,18 @@ export function MyRequests() {
       {/* Requests Grid/List */}
       {sortedRequests.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, }}
-          animate={{ opacity: 1, }}
-          className="glass-card p-12 rounded-2xl text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center"
         >
-          <FileText className="w-16 h-16 text-cool-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-cool-gray-700 mb-2">
+          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
             {requests.length === 0 
               ? "No visa requests yet" 
               : "No requests match your current filters"
             }
           </h3>
-          <p className="text-cool-gray-500 mb-6">
+          <p className="text-gray-500 mb-6">
             {requests.length === 0
               ? "Start by creating your first visa request to get matched with qualified immigration agents"
               : "Try adjusting your search terms or filters to see more results"
@@ -841,8 +962,7 @@ export function MyRequests() {
           {requests.length === 0 ? (
             <Button
               onClick={() => setShowPostRequest(true)}
-              variant="premium"
-              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create Your First Request
@@ -855,15 +975,14 @@ export function MyRequests() {
                   setFilterStatus("all");
                 }}
                 variant="outline"
-                size="lg"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 <RefreshCw className="w-5 h-5 mr-2" />
                 Clear Filters
               </Button>
               <Button
                 onClick={() => setShowPostRequest(true)}
-                variant="premium"
-                size="lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Create New Request
@@ -886,7 +1005,7 @@ export function MyRequests() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "glass-card rounded-2xl p-6 group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-royal-blue-200",
+                "bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200",
                 viewMode === "list" && "flex items-center gap-6",
               )}
             >
@@ -927,7 +1046,7 @@ export function MyRequests() {
                     <AnimatePresence>
                       {openDropdown === (request.id || (request as any)._id) && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          initial={{ opacity: 0, y: 0, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
@@ -978,26 +1097,26 @@ export function MyRequests() {
 
               <div className={cn(viewMode === "list" && "flex-1")}>
                 {/* Request Title */}
-                <h3 className="font-heading font-bold text-lg text-cool-gray-800 mb-2 line-clamp-2">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
                   {request.title}
                 </h3>
 
                 {/* Request Details */}
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-cool-gray-600">
-                    <MapPin className="w-4 h-4 mr-2 text-sage-green-500" />
+                  <div className="flex items-center text-sm text-gray-600">
+                    <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                     <span>
                       {request.targetCountry} • {request.visaType}
                     </span>
                   </div>
-                  <div className="flex items-center text-sm text-cool-gray-600">
-                    <DollarSign className="w-4 h-4 mr-2 text-gold-500" />
+                  <div className="flex items-center text-sm text-gray-600">
+                    <DollarSign className="w-4 h-4 mr-2 text-green-500" />
                     <span>
                       {budgetRanges.find(b => b.value === request.budget)?.label || request.budget}
                     </span>
                   </div>
-                  <div className="flex items-center text-sm text-cool-gray-600">
-                    <Calendar className="w-4 h-4 mr-2 text-royal-blue-500" />
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 mr-2 text-blue-500" />
                     <span>
                       {timelines.find(t => t.value === request.deadline)?.label || request.deadline}
                     </span>
@@ -1005,14 +1124,14 @@ export function MyRequests() {
                 </div>
 
                 {/* Description Preview */}
-                <p className="text-sm text-cool-gray-600 line-clamp-2 mb-4">
+                <p className="text-sm text-gray-600 line-clamp-2 mb-4">
                   {request.description}
                 </p>
 
                 {/* Proposals Count */}
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-cool-gray-600">
-                    Requirements: <strong className="text-royal-blue-600">
+                  <span className="text-gray-600">
+                    Requirements: <strong className="text-blue-600">
                       {request.requirements.length}
                     </strong>
                   </span>
@@ -1028,22 +1147,13 @@ export function MyRequests() {
                   onClick={() => handleViewProposals(request.id || (request as any)._id)}
                   variant="outline"
                   size="sm"
-                  className="group"
-                  style={{
-                    backgroundColor: "#E0F2E7",
-                    borderColor: "#0288D1",
-                    color: "#0288D1",
-                  }}
+                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   View Proposals
                   {proposalCounts[request.id || (request as any)._id] !== undefined && (
                     <Badge 
-                      className="ml-2 text-xs"
-                      style={{
-                        backgroundColor: proposalCounts[request.id || (request as any)._id] > 0 ? "#0288D1" : "#94A3B8",
-                        color: "white",
-                      }}
+                      className="ml-2 text-xs bg-blue-600 hover:bg-blue-700"
                     >
                       {proposalCounts[request.id || (request as any)._id]}
                     </Badge>
@@ -1074,22 +1184,13 @@ export function MyRequests() {
               className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
             >
               <div className="text-center">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: "#FFF5F5" }}
-                >
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-50">
                   <Trash2 className="w-6 h-6 text-red-500" />
                 </div>
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: "#455A64" }}
-                >
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">
                   Delete Request
                 </h3>
-                <p
-                  className="text-sm mb-6"
-                  style={{ color: "#455A64", opacity: 0.7 }}
-                >
+                <p className="text-sm mb-6 text-gray-600">
                   Are you sure you want to delete this visa request? This action
                   cannot be undone and all associated proposals will be lost.
                 </p>
@@ -1097,8 +1198,7 @@ export function MyRequests() {
                   <Button
                     onClick={() => setShowDeleteConfirm(null)}
                     variant="outline"
-                    className="flex-1 border-gray-300"
-                    style={{ color: "#455A64" }}
+                    className="flex-1 border-gray-300 text-gray-700"
                   >
                     Cancel
                   </Button>
