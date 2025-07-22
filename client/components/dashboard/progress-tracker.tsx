@@ -56,20 +56,20 @@ export function ProgressTracker({ cases }: ProgressTrackerProps) {
             initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.2, duration: 0.6 }}
-            className="glass-card p-8 rounded-3xl"
+            className="glass-card p-8 rounded-3xl border border-cool-gray-300"
           >
             {/* Application Header */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-heading font-bold text-cool-gray-800 mb-2">
-                  {caseItem.requestId?.title || 'Untitled Case'}
-                </h2>
-                <div className="flex items-center space-x-4">
-                  <span className="text-cool-gray-600">Agent: {caseItem.agentId?.name || 'N/A'}</span>
-                  <Badge className="bg-blue-100 text-blue-700">
-                    {caseItem.priority || 'medium'} priority
-                  </Badge>
-                </div>
+          <h2 className="text-2xl font-heading font-bold text-cool-gray-800 mb-2">
+            {caseItem.requestId?.title || 'Untitled Case'}
+          </h2>
+          <div className="flex items-center space-x-4">
+            <span className="text-cool-gray-600">Agent: {caseItem.agentId?.name || 'N/A'}</span>
+            <Badge className="bg-blue-100 text-blue-700">
+              {caseItem.priority || 'medium'} priority
+            </Badge>
+          </div>
               </div>
               <div className="mt-4 lg:mt-0 text-right">
                 <div className="text-2xl font-bold text-royal-blue-600">

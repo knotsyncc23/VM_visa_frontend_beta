@@ -451,20 +451,20 @@ export default function ClientDashboard() {
                             className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
                             style={{ backgroundColor: "#0288D1" }}
                           >
-                            JD
+                            {user?.name ? user.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase() : 'AG'}
                           </div>
                           <div>
                             <p
                               className="font-semibold text-sm"
                               style={{ color: "#455A64" }}
                             >
-                              John Doe
+                              {user?.name || 'Agent'}
                             </p>
                             <p
                               className="text-xs"
                               style={{ color: "#455A64", opacity: 0.7 }}
                             >
-                              john.doe@email.com
+                              {user?.email || ''}
                             </p>
                           </div>
                         </div>

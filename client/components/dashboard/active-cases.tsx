@@ -185,7 +185,7 @@ export function ActiveCases() {
             <div key={caseItem._id}>
               <Card className={cn(
                 "border-l-4",
-                isOverdue ? "border-l-red-500" : "border-l-royal-blue-500"
+                isOverdue ? "border-l-red-500" : "border-l-green-100 shadow-lg"
               )}>
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">

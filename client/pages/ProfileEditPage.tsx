@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/dashboard/shared/BackButton";
+import { useProfile, ProfileData } from "@/hooks/useProfile";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Save,
   Upload,
@@ -11,31 +13,111 @@ import {
   Phone,
   MapPin,
   Globe,
+  Loader2,
 } from "lucide-react";
 
 const ProfileEditPage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    phone: "+1 (555) 123-4567",
-    location: "Toronto, Canada",
-    bio: "Software engineer looking to expand career opportunities in Canada. Passionate about technology and innovation.",
-    dateOfBirth: "1990-01-15",
-    nationality: "American",
+  const { toast } = useToast();
+  const { profile, isLoading, updateProfile } = useProfile();
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<ProfileData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+    nationality: "",
+    currentCountry: "",
+    currentAddress: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
+    bio: "",
   });
+
+  // Update form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : "",
+        nationality: profile.nationality || "",
+        currentCountry: profile.currentCountry || "",
+        currentAddress: {
+          street: profile.currentAddress?.street || "",
+          city: profile.currentAddress?.city || "",
+          state: profile.currentAddress?.state || "",
+          zipCode: profile.currentAddress?.zipCode || "",
+          country: profile.currentAddress?.country || "",
+        },
+        bio: profile.bio || "",
+      });
+    }
+  }, [profile]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Handle nested address fields
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1];
+      setFormData((prev) => ({
+        ...prev,
+        currentAddress: {
+          ...prev.currentAddress,
+          [addressField]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSave = () => {
-    // Save logic here
-    console.log("Saving profile data:", formData);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      console.log('💾 Saving profile data:', formData);
+      
+      await updateProfile(formData);
+      
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to save profile:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleCancel = () => {
+    window.history.back();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#FEFEFE" }}>
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#0288D1" }} />
+          <span style={{ color: "#455A64" }}>Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FEFEFE" }}>
@@ -222,16 +304,91 @@ const ProfileEditPage: React.FC = () => {
                 className="block text-sm font-medium mb-2"
                 style={{ color: "#455A64" }}
               >
-                Location
+                Current Country
               </label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="currentCountry"
+                value={formData.currentCountry}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{ backgroundColor: "#FEFEFE", color: "#455A64" }}
+                placeholder="e.g., Canada, United States"
               />
+            </div>
+
+            <div className="mt-4">
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: "#455A64" }}
+              >
+                Street Address
+              </label>
+              <input
+                type="text"
+                name="address.street"
+                value={formData.currentAddress.street}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ backgroundColor: "#FEFEFE", color: "#455A64" }}
+                placeholder="e.g., 123 Main Street"
+              />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "#455A64" }}
+                >
+                  City
+                </label>
+                <input
+                  type="text"
+                  name="address.city"
+                  value={formData.currentAddress.city}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: "#FEFEFE", color: "#455A64" }}
+                  placeholder="e.g., Toronto"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "#455A64" }}
+                >
+                  State/Province
+                </label>
+                <input
+                  type="text"
+                  name="address.state"
+                  value={formData.currentAddress.state}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: "#FEFEFE", color: "#455A64" }}
+                  placeholder="e.g., Ontario"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "#455A64" }}
+                >
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  name="address.zipCode"
+                  value={formData.currentAddress.zipCode}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: "#FEFEFE", color: "#455A64" }}
+                  placeholder="e.g., K1A 0A9"
+                />
+              </div>
             </div>
 
             <div className="mt-4">
@@ -259,15 +416,27 @@ const ProfileEditPage: React.FC = () => {
               variant="outline"
               className="border-gray-300"
               style={{ color: "#455A64" }}
+              onClick={handleCancel}
+              disabled={isSaving}
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               style={{ backgroundColor: "#0288D1", color: "white" }}
+              disabled={isSaving}
             >
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
         </motion.div>

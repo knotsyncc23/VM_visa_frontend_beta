@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/auth/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/dashboard/shared/BackButton";
 import {
@@ -39,6 +40,7 @@ interface SettingsSection {
 }
 
 const SettingsPage: React.FC = () => {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState({
@@ -111,7 +113,7 @@ const SettingsPage: React.FC = () => {
             </label>
             <input
               type="text"
-              defaultValue="John"
+              defaultValue={user?.name?.split(' ')[0] || ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200"
               style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
             />
@@ -125,7 +127,7 @@ const SettingsPage: React.FC = () => {
             </label>
             <input
               type="text"
-              defaultValue="Doe"
+              defaultValue={user?.name?.split(' ').slice(1).join(' ') || ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200"
               style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
             />
@@ -139,7 +141,7 @@ const SettingsPage: React.FC = () => {
             </label>
             <input
               type="email"
-              defaultValue="john.doe@email.com"
+              defaultValue={user?.email || ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200"
               style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
             />
@@ -153,7 +155,7 @@ const SettingsPage: React.FC = () => {
             </label>
             <input
               type="tel"
-              defaultValue="+1 (555) 123-4567"
+              defaultValue={user?.phone || ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200"
               style={{ backgroundColor: "#F5FAFE", color: "#455A64" }}
             />
@@ -202,7 +204,7 @@ const SettingsPage: React.FC = () => {
             className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
             style={{ backgroundColor: "#0288D1" }}
           >
-            JD
+            {user?.name ? user.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase() : 'AG'}
           </div>
           <div className="space-x-2">
             <Button

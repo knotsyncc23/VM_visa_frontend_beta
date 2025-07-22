@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/dashboard/shared/BackButton";
+import { useAuth } from "@/components/auth/auth-context";
 import {
   User,
   Edit,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 
 const ProfilePage: React.FC = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FEFEFE" }}>
       {/* Back Button */}
@@ -39,13 +42,13 @@ const ProfilePage: React.FC = () => {
                   className="w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4"
                   style={{ backgroundColor: "#0288D1" }}
                 >
-                  JD
+                  {user?.name ? user.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase() : 'AG'}
                 </div>
                 <h1
                   className="text-xl font-bold mb-2"
                   style={{ color: "#455A64" }}
                 >
-                  John Doe
+                  {user?.name || 'Agent'}
                 </h1>
                 <Badge
                   className="mb-4"
@@ -105,7 +108,7 @@ const ProfilePage: React.FC = () => {
                         className="text-sm"
                         style={{ color: "#455A64", opacity: 0.8 }}
                       >
-                        john.doe@email.com
+                        {user?.email || ''}
                       </p>
                     </div>
                   </div>
@@ -123,7 +126,7 @@ const ProfilePage: React.FC = () => {
                         className="text-sm"
                         style={{ color: "#455A64", opacity: 0.8 }}
                       >
-                        +1 (555) 123-4567
+                        {user?.phone || 'Not provided'}
                       </p>
                     </div>
                   </div>

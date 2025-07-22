@@ -92,22 +92,26 @@ const calculateProfileCompletion = (user: any, userType: string): number => {
 };
 
 const getUserProfile = (userType: string, user?: any): UserProfile => {
+  console.log('🔍 ProfessionalSidebar - User data:', user);
+  console.log('🔍 ProfessionalSidebar - User type:', userType);
+  
   if (user) {
     // Use real user data when available
+    const userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
     const userTitle = user.title || (userType === 'agent' ? 'Immigration Consultant' : userType === 'client' ? 'Client' : 'Organization');
-    const userLocation = user.location || 'Location not set';
+    const userLocation = user.location || user.currentCountry || user.currentAddress?.city || 'Location not set';
     const userStatus = userType === 'agent' ? 'Premium' : userType === 'client' ? 'Verified Client' : 'Enterprise';
     const completionPercentage = calculateProfileCompletion(user, userType);
     
     return {
-      name: user.name || 'User',
+      name: userName,
       role: userTitle,
       location: userLocation,
       status: userStatus,
       completionPercentage: completionPercentage,
-      bio: user.bio || '',
+      bio: user.bio || 'No bio provided',
       email: user.email || '',
-      phone: user.phone || '',
+      phone: user.phone || 'Not provided',
       joinDate: userType === 'agent' ? `Licensed since ${user.experienceYears ? new Date().getFullYear() - user.experienceYears : '2020'}` : `Joined ${new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
     };
   }
@@ -116,15 +120,15 @@ const getUserProfile = (userType: string, user?: any): UserProfile => {
   switch (userType) {
     case "client":
       return {
-        name: "John Doe",
+        name: "Agent User",
         role: "Verified Client",
-        location: "Toronto, Canada 🇨🇦",
+        location: "Location not set",
         status: "Active",
         completionPercentage: 85,
-        bio: "Software engineer looking to expand career opportunities in Canada. Passionate about technology and innovation.",
-        email: "john.doe@email.com",
-        phone: "+1 (555) 123-4567",
-        joinDate: "Joined March 2024",
+        bio: "Please update your profile to add a bio.",
+        email: "agent@example.com",
+        phone: "Phone not set",
+        joinDate: "Joined recently",
       };
     case "agent":
       return {
