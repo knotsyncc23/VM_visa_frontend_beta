@@ -1,0 +1,8 @@
+# Disable Nixpacks detection
+# This forces Coolify to use our Dockerfile
+
+[build]
+builder = "dockerfile"
+
+[build.args]
+DOCKERFILE_PATH = "Dockerfile"
