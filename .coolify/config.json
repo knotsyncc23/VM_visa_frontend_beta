@@ -1,0 +1,25 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "buildArgs": {
+      "NODE_ENV": "production"
+    }
+  },
+  "deploy": {
+    "port": 3000,
+    "healthCheck": "/",
+    "startupProbe": {
+      "httpGet": {
+        "path": "/",
+        "port": 3000
+      },
+      "initialDelaySeconds": 30,
+      "periodSeconds": 10
+    }
+  },
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": "3000"
+  }
+}

@@ -1,55 +1,20 @@
-# VM Visa Frontend - Dockerfile
-# Optimized for production deployment on Coolify
+# VM Visa Frontend - Minimal Dockerfile for Coolify
+FROM node:18-alpine
 
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install
 
-# Rebuild the source code only when needed  
-FROM base AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-
+# Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
-
-# Production image with nginx
-FROM nginx:alpine AS runner
-
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy built application
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S frontend -u 1001
-
-# Set permissions
-RUN chown -R frontend:nodejs /usr/share/nginx/html
-RUN chown -R frontend:nodejs /var/cache/nginx
-RUN chown -R frontend:nodejs /etc/nginx
-RUN chown -R frontend:nodejs /var/log/nginx
-
-# Switch to non-root user
-USER frontend
+# Build the frontend
+RUN npm run build:client
 
 # Expose port
-EXPOSE 80
+EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start command using npx serve
+CMD ["npx", "serve", "-s", "dist/spa", "-l", "3000"]

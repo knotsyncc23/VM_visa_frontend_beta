@@ -1,0 +1,18 @@
+# Coolify Build Configuration
+# This tells Coolify to build a static SPA
+
+build:
+  dockerfile: "Dockerfile"
+  context: "."
+  
+environment:
+  NODE_ENV: "production"
+  PORT: "3000"
+  
+healthcheck:
+  path: "/"
+  port: 3000
+  
+networking:
+  port: 3000
+  protocol: "http"

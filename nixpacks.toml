@@ -1,0 +1,15 @@
+# Nixpacks Configuration for VM Visa Frontend
+# This file tells Nixpacks to use our custom Dockerfile instead
+
+[build]
+dockerfile = "Dockerfile"
+
+[variables]
+NODE_ENV = "production"
+NIXPACKS_SPA_OUTPUT_DIR = "dist/spa"
+
+[phases.build]
+cmd = "npm run build:client"
+
+[phases.start] 
+cmd = "nginx -g 'daemon off;'"
