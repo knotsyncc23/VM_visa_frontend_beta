@@ -1,25 +1,32 @@
-# VM Visa Frontend - Simple Build Dockerfile
+# VM Visa Frontend - Optimized Build Dockerfile
 FROM node:18-alpine
 
 WORKDIR /app
+
+# Set memory limit for node process
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies with legacy peer deps to resolve conflicts
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps --production=false
 
 # Copy source code
 COPY . .
 
-# Build the frontend
-RUN npm run build:client
+# Build the frontend with memory optimization
+RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build:client
 
-# Install a simple HTTP server globally
-RUN npm install -g http-server
+# Install serve globally (lighter than http-server)
+RUN npm install -g serve
 
 # Expose port
 EXPOSE 3000
 
-# Start command using http-server
-CMD ["http-server", "dist/spa", "-p", "3000", "-c-1"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Start command using serve
+CMD ["serve", "-s", "dist/spa", "-l", "3000"]
