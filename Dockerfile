@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Set memory limit for node process
 ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV PORT=3000
 
 # Copy package files
 COPY package*.json ./
@@ -18,8 +19,8 @@ COPY . .
 # Build the frontend with memory optimization
 RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build:client
 
-# Install serve globally (lighter than http-server)
-RUN npm install -g serve
+# Copy the simple server file
+COPY server.js .
 
 # Expose port
 EXPOSE 3000
@@ -28,5 +29,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start command using serve
-CMD ["serve", "-s", "dist/spa", "-l", "3000"]
+# Start command using our simple server
+CMD ["node", "server.js"]
