@@ -25,5 +25,9 @@ COPY server.js .
 # Expose port
 EXPOSE 3000
 
+# Simple healthcheck using node
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
 # Start command using our simple server
 CMD ["node", "server.js"]
